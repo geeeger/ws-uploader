@@ -1,0 +1,53 @@
+{
+  "name": "@geeeger/ws-uploader",
+  "version": "0.0.1",
+  "files": [
+    "lib/"
+  ],
+  "description": "Not uploader",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ws:qetag": "rollup -c ./scripts/qetag.config.js && node scripts/js2str.js ./scripts/qetag.config.js",
+    "ws:uploader": "rollup -c ./scripts/uploader.config.js && node scripts/js2str.js ./scripts/uploader.config.js",
+    "ws": "npm run ws:qetag && npm run ws:uploader",
+    "build": "rimraf lib/ && npm run ws && tsc --project ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/geeeger/ws-uploader.git"
+  },
+  "author": {
+    "name": "geeeger",
+    "email": "lph1988520@sina.com"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/geeeger/ws-uploader/issues"
+  },
+  "homepage": "https://github.com/geeeger/ws-uploader#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^11.0.1",
+    "@rollup/plugin-node-resolve": "^7.0.0",
+    "@types/crypto-js": "^3.1.43",
+    "@types/lodash": "^4.14.149",
+    "@types/node": "^13.7.0",
+    "rimraf": "^3.0.1",
+    "rollup": "^1.31.0",
+    "rollup-plugin-terser": "^5.2.0",
+    "rollup-plugin-uglify": "^6.0.4",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.7.5"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "crypto-js": "^3.1.9-1",
+    "lodash": "^4.17.15",
+    "math-log2": "^1.0.1",
+    "throat": "^5.0.0"
+  }
+}
