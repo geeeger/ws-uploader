@@ -37,7 +37,7 @@ export default class Block implements Interface.Block {
     }
 
     get index(): number {
-        return this.startByte / this.file.blockSize;
+        return Math.round(this.startByte / this.file.blockSize);
     }
 
     get blob(): Blob {

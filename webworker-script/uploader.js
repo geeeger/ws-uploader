@@ -12,5 +12,27 @@ module.exports = function handler(data) {
                 }
             })
         }
-    }));
+    })).then(function(res){
+        return {
+            data: res.data,
+            status: res.status,
+            statusText: res.statusText
+        }
+    }, function (e) {
+        if (e.response.data) {
+            return {
+                data: e.response.data,
+                status: e.response.status,
+                statusText: e.response.statusText
+            };
+        }
+        return {
+            data: {
+                code: e.response.status,
+                message: e.response.statusText
+            },
+            status: e.response.status,
+            statusText: e.response.statusText
+        }
+    });
 }

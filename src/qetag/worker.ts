@@ -1,6 +1,6 @@
-import Base64 = require("crypto-js/enc-base64");
-import LibWordArray = require("crypto-js/lib-typedarrays");
-import SHA1 = require("crypto-js/sha1");
+import Base64 from "crypto-js/enc-base64";
+import LibWordArray from "crypto-js/lib-typedarrays";
+import SHA1 from "crypto-js/sha1";
 import log2 from "math-log2";
 import QETagBase from "./base";
 import Interface from "../../types/interface";
@@ -11,7 +11,7 @@ export default class QETagWorker extends QETagBase implements Interface.QETagWor
     public channel: string;
 
     constructor(file: Interface.QZFile, opts: {
-        workers: Interface.WorkersProvider
+        workers: Interface.WorkersProvider;
     }) {
         super(file);
         this.workers = opts.workers;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import Interface from "../../types/interface";
 import Block from "./block";
 
@@ -20,6 +21,9 @@ export default class Chunk implements Interface.Chunk {
     }
 
     get blob() {
-        return this.block.blob.slice(this.startByte, this.endByte);
+        const block = this.block;
+        const file = block.file;
+        const offset = block.index * file.blockSize;
+        return file.slice(offset + this.startByte, offset + this.endByte);
     }
 }

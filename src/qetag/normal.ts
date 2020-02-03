@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
 import { WordArray } from "crypto-js";
-import Base64 = require("crypto-js/enc-base64");
-import LibWordArray = require("crypto-js/lib-typedarrays");
-import SHA1 = require("crypto-js/sha1");
+import Base64 from "crypto-js/enc-base64";
+import LibWordArray from "crypto-js/lib-typedarrays";
+import SHA1 from "crypto-js/sha1";
 import log2 from "math-log2";
 import throat from "throat";
 import QETagBase from "./base";
@@ -10,7 +12,7 @@ import Interface from "../../types/interface";
 export default class QETagNormal extends QETagBase implements Interface.QETagNormal {
     public concurrency: number;
 
-    constructor(file: Interface.QZFile, opts?: any) {
+    constructor(file: Interface.QZFile, _?: any) {
         super(file);
         this.concurrency = window.navigator.hardwareConcurrency || 1;
     }

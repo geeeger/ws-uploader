@@ -10,6 +10,7 @@ import QeTagWorkerScript from './ws/qetag.bundle';
 import uploaderWorkerScript from './ws/uploader.bundle';
 import merge from 'lodash/merge';
 import Chunk from "./core/chunk";
+import { AxiosResponse } from "axios";
 
 export enum STATUS {
     PENDING = 1,
@@ -33,7 +34,7 @@ export const TASK_STATUS_INFO = {
     [STATUS.PAUSE]: '暂停上传'
 };
 
-const UPLOADING_STATUS = {
+export const UPLOADING_STATUS = {
     [STATUS.PREPARING]: 1,
     [STATUS.UPLOADING]: 1,
     [STATUS.CALCULATING]: 1
@@ -74,6 +75,12 @@ export type TokenInfo = {
     filePath: string;
 };
 
+export interface CreateFileResInfo {
+    code?: string;
+    response?: string;
+    message?: string;
+}
+
 export type UploadedFileInfo = {
     children: any[];
     identity: string;
@@ -103,7 +110,7 @@ export type UploadedFileInfo = {
 export interface TokenResult {
     uploadInfo?: TokenInfo;
     hashCached: boolean;
-    file?: UploadedFileInfo
+    file?: UploadedFileInfo;
 };
 
 export interface TokenResponse {
@@ -143,6 +150,7 @@ export class WebFile {
             mkfile: '/mkfile/'
         },
         AuthorizationTokenKey: 'qingzhen-token',
+        AuthorizationStorageKey: 'user-authorization-token',
         chunkRetry: 3,
         blockSize: 4 * 1024 * 1024,
         chunkSize: 1 * 1024 * 1024,
@@ -152,8 +160,8 @@ export class WebFile {
         concurrency: 3,
         taskConcurrencyInWorkers: 3,
     };
-    tryCount: number = 0;
-    progress: number = 0;
+    tryCount = 0;
+    progress = 0;
     ctx: {
         length: number;
         [key: string]: any;
@@ -167,20 +175,20 @@ export class WebFile {
         time: null,
         size: 0
     };
-    bytesPreSecond: number = 0;
-    rate: string = '0KB/S';
-    parent: string = '';
+    bytesPreSecond = 0;
+    rate = '0KB/S';
+    parent = '';
     props: FileProps;
     normalFile?: UploadedFileInfo;
-    error: Error | undefined;
-    static config(config: any) {
+    error: Error[] = [];
+    public static config(config: any): void {
         WebFile.default = merge(WebFile.default, config);
     }
     http?: HttpClient | WorkerClient;
     file: QZFile;
     config: { adapter: AdapterType; onStatusChange: Function } & UplaodConfig;
     qetag?: QeTagNormal | QeTagWorker;
-    hashCalcProgress: number = 0;
+    hashCalcProgress = 0;
     status: STATUS = STATUS.PENDING;
     sizeStr: string;
     tokenInfo: TokenInfo = {
@@ -203,7 +211,8 @@ export class WebFile {
         
         this.config = Object.assign({
             adapter: 'Normal',
-            onStatusChange: () => {}
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            onStatusChange: function () {}
         }, config);
 
         this.file = new QZFile({
@@ -215,7 +224,7 @@ export class WebFile {
         this.sizeStr = sizeToStr(this.file.size);
     }
 
-    private _qetag() {
+    private _qetag(): QeTagNormal | QeTagWorker {
         if (!this.qetag) {
             if (!qetagWorkers && this.config.adapter === 'Worker') {
                 qetagWorkers = new WorkerProvider(WorkerProvider.asyncFnMover(QeTagWorkerScript), WebFile.default.taskConcurrencyInWorkers);
@@ -232,7 +241,7 @@ export class WebFile {
         return this.qetag;
     }
 
-    getHash(): Promise<string> {
+    public getHash(): Promise<string> {
         const qetag = this._qetag();
         if (qetag.isExist()) {
             return Promise.resolve(qetag.getSync());
@@ -243,21 +252,21 @@ export class WebFile {
         });
     }
 
-    getHashSync(): string {
+    public getHashSync(): string {
         const qetag = this._qetag();
         return qetag.getSync();
     }
 
-    setHash(hash: string) {
+    public setHash(hash: string): void {
         const qetag = this._qetag();
         qetag.set(hash);
     }
 
-    get statusInfo(): string {
+    public get statusInfo(): string {
         return TASK_STATUS_INFO[this.status];
     }
 
-    isExisted() {
+    public isExisted(): boolean {
         if (this.tokenInfo) {
             if (this.tokenInfo.identity) {
                 return true;
@@ -266,7 +275,7 @@ export class WebFile {
         return false;
     }
 
-    private _http() {
+    private _http(): HttpClient | WorkerClient {
         if (!this.http) {
             if (!uploaderWorkers && this.config.adapter === 'Worker') {
                 uploaderWorkers = new WorkerProvider(WorkerProvider.asyncFnMover(uploaderWorkerScript), WebFile.default.taskConcurrencyInWorkers);
@@ -281,41 +290,40 @@ export class WebFile {
         return this.http;
     }
 
-    private _getDefaultRequestHeader() {
-        const key = WebFile.default.AuthorizationTokenKey;
-        const token = localStorage.getItem(key);
+    private _getDefaultRequestHeader(): any {
+        const { AuthorizationTokenKey, AuthorizationStorageKey } = WebFile.default;
+        const token = localStorage.getItem(AuthorizationStorageKey);
         if (token) {
             return {
                 headers: {
-                    [key]: token
+                    [AuthorizationTokenKey]: token
                 }
             }
         }
         return {};
     }
 
-    async getTokenInfo() {
+    public async getTokenInfo(): Promise<TokenResult> {
         const http = this._http();
-        const { data } = await http.post<TokenResponse>({
+        const result = await http.post<TokenResponse>({
             url: WebFile.default.apis.token,
             data: {
                 hash: this.getHashSync(),
-                path: this.parent,
+                path: this.props.identity,
                 name: this.file.name,
                 override: this.props.override
             },
             config: merge({}, WebFile.default.clientConfig, this._getDefaultRequestHeader())
         })
 
-        if (data.success) {
-            return data.result;
+        if (result.data.success) {
+            return result.data.result;
         }
-
-        throw new Error(data.code);
+        throw new Error(result.data.code);
     }
 
 
-    markTry(tryNum?: number) {
+    public markTry(tryNum?: number): void {
         if (tryNum) {
             this.tryCount = tryNum;
         }
@@ -324,38 +332,64 @@ export class WebFile {
         }
     }
 
-    setStatus(status: STATUS, e?: Error) {
+    public setStatus(status: STATUS): void {
         this.status = status;
-        if (status === STATUS.PENDING) {
-            this.tryCount = 0;
-        }
-        if (status === STATUS.DONE) {
-            this.progress = 100;
-            this.http && this.http.removeAllListeners();
-            this.qetag && this.qetag.removeAllListeners();
-        }
-        if (status === STATUS.FAILED) {
-            this.error = e;
+        switch (status) {
+            case STATUS.CALCULATING:
+                // todo
+                break;
+            case STATUS.CANCEL:
+                if (this.http) {
+                    this.http.removeAllListeners();
+                }
+                if (this.qetag) {
+                    this.qetag.removeAllListeners();
+                }
+                break;
+            case STATUS.DONE:
+                this.progress = 100;
+                if (this.http) {
+                    this.http.removeAllListeners();
+                }
+                if (this.qetag) {
+                    this.qetag.removeAllListeners();
+                }
+                break;
+            case STATUS.FAILED:
+                // todo
+                break;
+            case STATUS.PAUSE:
+                this.tryCount = 0;
+                break;
+            case STATUS.PENDING:
+                this.tryCount = 0;
+                break;
+            case STATUS.PREPARING:
+                // todo
+                break;
+            case STATUS.UPLOADING:
+                // todo
+                break;
+            default:
+                break;
         }
         this.config.onStatusChange(this, this.status);
     }
 
-    getError() {
-        if (this.isFailed()) {
-            return this.error;
-        }
-        return null;
+    public getError(): Error[] {
+        return this.error;
     }
 
-    setProgress(byte: number) {
-        let now = new Date().getTime();
-        let { blockSize, chunkSize } = WebFile.default;
-        let bytesUploading = this.pos
-            .filter(pos => pos.status === STATUS.PENDING)
+    public setProgress(byte: number): void {
+        const now = new Date().getTime();
+        const { blockSize, chunkSize } = WebFile.default;
+        const bytesUploading = this.pos
+            .filter(pos => pos.status === STATUS.UPLOADING)
             .map(pos => this.ctx[pos.index])
             .filter(ctx => ctx && ctx.length)
-            .reduce((a, b) => a.length + b.length, []) * chunkSize;
-        let bytesUploaded = this.ctx.length * blockSize + bytesUploading + byte;
+            .map(ctx => ctx.length)
+            .reduce((a, b) => a + b, 0) * chunkSize;
+        const bytesUploaded = this.ctx.length * blockSize + bytesUploading + byte;
         
         if (this.lastProgress.time) {
             this.bytesPreSecond = Math.floor((bytesUploaded - this.lastProgress.size) / ((now - this.lastProgress.time) / 1000));
@@ -367,46 +401,50 @@ export class WebFile {
             size: bytesUploaded
         }
 
-        this.progress = (bytesUploaded / this.file.size) * 100;
+        this.progress = parseFloat((bytesUploaded * 100 / this.file.size).toFixed(2));
+
+        if (this.bytesPreSecond > 0) {
+            this.setStatus(STATUS.UPLOADING);
+        }
     }
 
-    isUploading() {
+    public isUploading(): boolean {
         return this.status in UPLOADING_STATUS;
     }
 
-    isFailed() {
+    public isFailed(): boolean {
         return this.status === STATUS.FAILED;
     }
 
-    isDone() {
+    public isDone(): boolean {
         return this.status === STATUS.DONE;
     }
 
-    isPending() {
+    public isPending(): boolean {
         return this.status === STATUS.PENDING;
     }
 
-    isTryout() {
+    public isTryout(): boolean {
         return this.tryCount > WebFile.default.chunkRetry;
     }
 
-    isCancel() {
+    public isCancel(): boolean {
         return this.status === STATUS.CANCEL;
     }
 
-    isCalculating() {
+    public isCalculating(): boolean {
         return this.status === STATUS.CALCULATING;
     }
 
-    isPreparing() {
+    public isPreparing(): boolean {
         return this.status === STATUS.PREPARING;
     }
 
-    isPaused() {
+    public isPaused(): boolean {
         return this.status === STATUS.PAUSE;
     }
 
-    pause(): Promise<any> {
+    public pause(): Promise<any> {
         if (this.isUploading()) {
             this.setStatus(STATUS.PAUSE);
             return Promise.resolve();
@@ -414,20 +452,19 @@ export class WebFile {
         return Promise.reject(new Error(`Warning: Non-uploading`));
     }
 
-    resume(): Promise<any> {
+    public resume(): Promise<any> {
         if (this.isPaused()) {
-            this.setStatus(STATUS.UPLOADING);
             return this.upload();
         }
         return Promise.reject(new Error(`Warning: Uploading`));
     }
 
-    cancel(): Promise<any> {
+    public cancel(): Promise<any> {
         this.setStatus(STATUS.CANCEL);
         return Promise.resolve();
     }
 
-    setFileInfo(info: TokenResult) {
+    public setFileInfo(info: TokenResult): void {
         if (info.file) {
             this.tokenInfo.identity = info.file.identity;
             this.normalFile = info.file;
@@ -437,7 +474,7 @@ export class WebFile {
         }
     }
 
-    async upload(): Promise<any> {
+    public async upload(): Promise<any> {
         if (this.isUploading()) {
             throw new Error(`Warning: Uploading`);
         }
@@ -454,15 +491,20 @@ export class WebFile {
             if (this.isCancel()) {
                 throw new Error(`Warning: Cancel upload`);
             }
-            this.start();
             this.setStatus(STATUS.UPLOADING);
+            this.start();
         }
         catch (e) {
-            this.setStatus(STATUS.FAILED, e);
+            this.setStatus(STATUS.FAILED);
+            this.recordError(e);
         }
     }
 
-    async start(): Promise<any> {
+    public recordError(e: Error): void {
+        this.error.push(e);
+    }
+
+    public async start(): Promise<any> {
         if (this.isDone()) {
             return;
         }
@@ -479,7 +521,8 @@ export class WebFile {
             }
         }
         catch (e) {
-            this.setStatus(STATUS.FAILED, e);
+            this.setStatus(STATUS.FAILED);
+            this.recordError(e);
             return;
         }
         
@@ -487,7 +530,7 @@ export class WebFile {
             if (this.ctx.length === this.file.getBlocks().length) {
                 const { data }: any = await this.createFile();
                 if (data.code) {
-                    throw new Error(data.message);
+                    throw new Error(`Create: ${data.message}`);
                 }
                 if (data.hash !== this.getHashSync()) {
                     throw new Error(`Warning: File check failed`);
@@ -497,23 +540,25 @@ export class WebFile {
                 this.setStatus(STATUS.DONE);
                 return;
             }
+            this.setPos();
+            this.pos.filter(p => p.status === STATUS.PENDING).map(v => {
+                v.status = STATUS.UPLOADING;
+                this.blockStart(v);
+            });
         }
         catch (e) {
             this.markTry();
             this.start();
+            this.recordError(e);
             return;
         }
-        this.setPos();
-        this.pos.map(v => {
-            this.blockStart(v);
-        })
     }
 
-    setNormalFile(file: UploadedFileInfo) {
+    public setNormalFile(file: UploadedFileInfo): void {
         this.normalFile = file;
     }
 
-    createFile() {
+    public createFile(): Promise<AxiosResponse<CreateFileResInfo>> {
         const http = this._http();
         const {
             clientConfig,
@@ -526,6 +571,7 @@ export class WebFile {
                 {},
                 clientConfig,
                 {
+                    baseURL: this.tokenInfo.uploadUrl,
                     headers: {
                         'Authorization': this.tokenInfo.uploadToken,
                         'UploadBatch': this.file.batch,
@@ -536,71 +582,75 @@ export class WebFile {
         })
     }
 
-    setPos() {
-        let pos = Math.max.apply(null, this.pos);
+    public setPos(): void {
+        let pos = Math.max.apply(null, this.pos.length ? this.pos.map(p => p.index) : [-1]);
         this.pos = this.pos.filter((pos) => pos.status !== STATUS.DONE);
         let len = WebFile.default.concurrency - this.pos.length;
+        if (len < 0) {
+            len = 0;
+        }
         while (len) {
             pos++;
             if (this.file.getBlockByIndex(pos)) {
                 this.pos.push({
                     index: pos,
-                    status: STATUS.PENDING,
-                    try: 0
+                    status: STATUS.PENDING
                 })
             }
             len--;
         }
     }
 
-    async blockStart(info: any) {
-        if (info.try > WebFile.default.chunkRetry) {
-            this.markTry(Infinity);
-            this.start();
-            return;
+    private _orderTask(chunks: Chunk[]): Promise<any> {
+        let promise: Promise<any> = Promise.resolve();
+
+        for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            promise = promise
+                .then((ctx: any) => this.chunkUpload(chunk, ctx))
+                .then((res) => {
+                    if (res.data.code) {
+                        throw new Error(`Chunk: ${res.data.message}`);
+                    }
+                    this.setCtx(res.data.ctx, chunk)
+                    return res.data.ctx;
+                })
         }
-        info.status = STATUS.UPLOADING;
-        const block = this.file.getBlockByIndex(info.index);
-        const chunks = block.getChunks();
+        return promise
+    }
+
+    public async blockStart(info: any): Promise<any> {
         try {
-            let result = await this.chunkUpload(chunks[0]);
-
-            if (result.data.code) {
-                throw new Error(result.data.message);
-            }
-            this.setCtx(result.data.ctx, chunks[0]);
-            for (let i = 1; i < chunks.length; i++) {
-                result = await this.chunkUpload(chunks[i], result.data.ctx);
-                if (result.data.code) {
-                    throw new Error(result.data.message);
-                }
-                this.setCtx(result.data.ctx, chunks[i]);
-            }
-
+            const block = this.file.getBlockByIndex(info.index);
+            const chunks = block.getChunks();
+            await this._orderTask(chunks);
             info.status = STATUS.DONE;
+            this.start();
         }
         catch (e) {
             info.status = STATUS.PENDING;
-            info.try++;
-            this.blockStart(info);
-            return;
+            this.removeCtx(info.index);
+            this.markTry();
+            this.recordError(e);
+            this.start();
         }
-
-        this.start();
     }
 
-    setCtx(ctx: string, chunk: Chunk) {
-        let record = this.ctx[chunk.block.index];
+    public removeCtx(index: number): void {
+        delete this.ctx[index];
+    }
+
+    public setCtx(ctx: string, chunk: Chunk): void {
         if (chunk.index === 0) {
-            record = []
+            this.ctx[chunk.block.index] = []
         }
-        record.push(ctx);
-        if (record.length === chunk.block.getChunks().length) {
+        this.ctx[chunk.block.index][chunk.index] = ctx;
+        if (this.ctx[chunk.block.index].length === chunk.block.getChunks().length) {
             this.ctx.length += 1;
         }
     }
 
-    chunkUpload(chunk: Chunk, ctx?: string) {
+    public chunkUpload(chunk: Chunk, ctx?: string): Promise<AxiosResponse<BPutResponse>> {
         const http = this._http();
         const {
             clientConfig,
@@ -612,7 +662,6 @@ export class WebFile {
             config: merge(
                 {},
                 clientConfig,
-                this._getDefaultRequestHeader(),
                 {
                     baseURL: this.tokenInfo.uploadUrl,
                     headers: {

@@ -1,6 +1,6 @@
 {
   "name": "@geeeger/ws-uploader",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "files": [
     "lib/"
   ],
@@ -36,6 +36,9 @@
     "@types/crypto-js": "^3.1.43",
     "@types/lodash": "^4.14.149",
     "@types/node": "^13.7.0",
+    "@typescript-eslint/eslint-plugin": "^2.18.0",
+    "@typescript-eslint/parser": "^2.18.0",
+    "eslint": "^6.8.0",
     "rimraf": "^3.0.1",
     "rollup": "^1.31.0",
     "rollup-plugin-terser": "^5.2.0",

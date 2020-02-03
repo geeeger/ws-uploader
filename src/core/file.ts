@@ -6,6 +6,8 @@ import { guid } from "./utils";
 const rExt = /\.([^.]+)$/;
 let uid = 1;
 
+export type QZFileProps = Interface.QZFileProps;
+
 export default class QZFile implements Interface.QZFile {
     public file: File;
     public batch: string;
@@ -17,22 +19,21 @@ export default class QZFile implements Interface.QZFile {
     public ext: string;
     public size: number;
     public type: string;
-
-    constructor({
+    public constructor({
         file,
-        blockSize = 4 * 1024 * 1024,
-        chunkSize = 1 * 1024 * 1024,
-        batch = guid(),
+        blockSize,
+        chunkSize,
+        batch,
     }: Interface.QZFileProps) {
         this.file = file;
-        this.blockSize = blockSize;
-        this.batch = batch;
+        this.blockSize = blockSize || 4 * 1024 * 1024;
+        this.batch = batch || guid();
         this.size = file.size;
         this.name = file.name || "unknown_" + uid++;
         this.lastModified = file.lastModified || new Date().getTime();
         this.blocks = [];
-        this.chunkSize = chunkSize;
-        let ext = rExt.exec(file.name) ? RegExp.$1.toLowerCase() : "";
+        this.chunkSize = chunkSize || 1 * 1024 * 1024;
+        let ext: string = rExt.exec(file.name) ? RegExp.$1.toLowerCase() : "";
         if (!ext && file.type) {
             ext = /\/(jpg|jpeg|png|gif|bmp)$/i.exec(file.type) ? RegExp.$1.toLowerCase() : "";
             if (ext) {

@@ -76,6 +76,7 @@
     "./webworker-script",
     "./scripts",
     "./node_modules",
-    "./lib"
+    "./lib",
+    "./test"
   ]
 }

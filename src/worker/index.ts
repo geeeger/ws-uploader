@@ -29,10 +29,7 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
         const blob = new Blob([`
             $$=${fn};
             onmessage=function (e) {
-                Promise.resolve(function() {
-                        return $$.apply($$, e.data);
-                    })
-                    .then(
+                $$(e.data).then(
                         function (res) {
                             postMessage({
                                 channel: e.data.channel,
@@ -55,7 +52,7 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
     public workers: Interface.MyWorker[];
     public cpus: number;
     public messages: Interface.WorkerMessages[];
-    public constructor(workerPath: string, taskConcurrency: number = 1) {
+    public constructor(workerPath: string, taskConcurrency = 1) {
         super();
         this.workers = [];
         this.messages = [];
@@ -79,10 +76,8 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
         for (let i = 0; i < this.cpus; i++) {
             const worker = this.workers[i];
             if (e.target === worker.instance) {
-                if (worker.tasks >= this.taskConcurrency) {
-                    worker.buzy = false;
-                    worker.tasks = 0;
-                }
+                worker.buzy = false;
+                worker.tasks--;
                 this.run();
             }
         }
@@ -105,6 +100,7 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
             if (idleWorker.tasks >= this.taskConcurrency) {
                 idleWorker.buzy = true;
             }
+            // eslint-disable-next-line prefer-spread
             idleWorker.instance.postMessage.apply(idleWorker.instance, message);
         }
     }

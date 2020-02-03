@@ -84,3 +84,6 @@ typings/
 
 # lib
 lib/
+
+# test
+test/

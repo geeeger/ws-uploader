@@ -1,5 +1,5 @@
 import Interface, { HttpClientProps } from "../../types/interface";
-import { guid, isObject } from "../core/utils";
+import { guid } from "../core/utils";
 import { AxiosResponse } from "axios";
 import HttpClient from "./base";
 
@@ -8,7 +8,7 @@ export default class HttpWorker extends HttpClient implements Interface.HttpClie
     public channel: string;
 
     constructor(opts: {
-        workers: Interface.WorkersProvider
+        workers: Interface.WorkersProvider;
     }) {
         super();
         this.workers = opts.workers;
@@ -16,32 +16,28 @@ export default class HttpWorker extends HttpClient implements Interface.HttpClie
     }
 
     public post<T>(props: HttpClientProps, { isTransferSupported, isEmitEvent }: any = {}): Promise<AxiosResponse<T>> {
-        this.workers.removeMessagesByChannel(this.channel);
-        this.workers.removeAllListeners(this.channel);
         return new Promise((resolve, reject): void => {
-            this.workers.on(this.channel, (error: any, payload: any): void => {
+            const channel = guid();
+            this.workers.on(channel, (error: any, payload: any): void => {
                 if (error) {
-                    this.workers.removeAllListeners(this.channel);
+                    this.workers.removeAllListeners(channel);
                     reject(new Error(error));
                 }
-                if (isObject(payload) && payload.type === 'process') {
+                if (typeof payload === 'object' && payload.type === 'progress') {
                     isEmitEvent && this.emit('UpdateProgress', payload.data);
                 }
                 else {
-                    this.workers.removeAllListeners(this.channel);
+                    this.workers.removeAllListeners(channel);
                     resolve(payload);
                 }
             });
-            const transfer = [];
-            if (isTransferSupported) {
-                transfer.push(props.data);
-            }
+            const opts = isTransferSupported ? {
+                transfer: [props.data]
+            } : undefined;
             this.workers.send({
-                channel: this.channel,
+                channel: channel,
                 payload: props,
-            }, {
-                transfer
-            })
+            }, opts)
         });
     }
 }
