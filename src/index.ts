@@ -190,7 +190,6 @@ export class WebFile {
         filePath: ''
     };
     pos: any[] = [];
-    
     constructor (file: File, fileProps: FileProps = {}, config: UplaodConfig = {}) {
         this.props = Object.assign({
             identity: '',
@@ -350,7 +349,13 @@ export class WebFile {
 
     setProgress(byte: number) {
         let now = new Date().getTime();
-        let bytesUploaded = this.ctx.length * WebFile.default.chunkSize + byte;
+        let { blockSize, chunkSize } = WebFile.default;
+        let bytesUploading = this.pos
+            .filter(pos => pos.status === STATUS.PENDING)
+            .map(pos => this.ctx[pos.index])
+            .filter(ctx => ctx && ctx.length)
+            .reduce((a, b) => a.length + b.length, []) * chunkSize;
+        let bytesUploaded = this.ctx.length * blockSize + bytesUploading + byte;
         
         if (this.lastProgress.time) {
             this.bytesPreSecond = Math.floor((bytesUploaded - this.lastProgress.size) / ((now - this.lastProgress.time) / 1000));
@@ -516,7 +521,7 @@ export class WebFile {
         } = WebFile.default;
         return http.post({
             url: apis.mkfile + this.file.size,
-            data: Array.from(this.ctx).toString(),
+            data: Array.from(this.ctx).map(ctx => ctx[ctx.length - 1]).toString(),
             config: merge(
                 {},
                 clientConfig,
@@ -563,15 +568,14 @@ export class WebFile {
             if (result.data.code) {
                 throw new Error(result.data.message);
             }
-
+            this.setCtx(result.data.ctx, chunks[0]);
             for (let i = 1; i < chunks.length; i++) {
                 result = await this.chunkUpload(chunks[i], result.data.ctx);
                 if (result.data.code) {
                     throw new Error(result.data.message);
                 }
+                this.setCtx(result.data.ctx, chunks[i]);
             }
-
-            this.setCtx(result.data.ctx, chunks[chunks.length - 1]);
 
             info.status = STATUS.DONE;
         }
@@ -586,8 +590,14 @@ export class WebFile {
     }
 
     setCtx(ctx: string, chunk: Chunk) {
-        this.ctx[chunk.block.index] = ctx;
-        this.ctx.length += 1;
+        let record = this.ctx[chunk.block.index];
+        if (chunk.index === 0) {
+            record = []
+        }
+        record.push(ctx);
+        if (record.length === chunk.block.getChunks().length) {
+            this.ctx.length += 1;
+        }
     }
 
     chunkUpload(chunk: Chunk, ctx?: string) {
