@@ -1026,7 +1026,7 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                 const params = {
                     hash: this.getHashSync(),
                     name: this.file.name,
-                    op: this.props.op
+                    op: this.props.op || 0
                 };
                 if (this.props.path) {
                     params.path = this.props.path;
