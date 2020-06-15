@@ -1,6 +1,5 @@
 import Interface, { HttpClientProps } from "../../types/interface";
 import { guid } from "../core/utils";
-import { AxiosResponse } from "axios";
 import HttpClient from "./base";
 
 export default class HttpWorker extends HttpClient implements Interface.HttpClient {
@@ -15,20 +14,20 @@ export default class HttpWorker extends HttpClient implements Interface.HttpClie
         this.channel = guid();
     }
 
-    public post<T>(props: HttpClientProps, { isTransferSupported, isEmitEvent }: any = {}): Promise<AxiosResponse<T>> {
+    public post<T>(props: HttpClientProps, { isTransferSupported, isEmitEvent }: any = {}): Promise<T> {
         return new Promise((resolve, reject): void => {
             const channel = guid();
-            this.workers.on(channel, (error: any, payload: any): void => {
-                if (error) {
+            this.workers.on(channel, (payload: any): void => {
+                if (payload.type === 'error') {
                     this.workers.removeAllListeners(channel);
-                    reject(new Error(error));
+                    reject(payload.data);
                 }
-                if (typeof payload === 'object' && payload.type === 'progress') {
+                if (payload.type === 'progress') {
                     isEmitEvent && this.emit('UpdateProgress', payload.data);
                 }
                 else {
                     this.workers.removeAllListeners(channel);
-                    resolve(payload);
+                    resolve(payload.data);
                 }
             });
             const opts = isTransferSupported ? {

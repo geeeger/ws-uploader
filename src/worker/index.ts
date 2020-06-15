@@ -25,21 +25,31 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
             return !Boolean(buffer.byteLength);
         })();
     }
-    public static asyncFnMover(fn: string): string {
+    public static asyncFnMover(fn: Function): string {
         const blob = new Blob([`
-            $$=${fn};
+            $$=${fn.toString()};
             onmessage=function (e) {
                 $$(e.data).then(
                         function (res) {
+                            var payload = {
+                                data: res,
+                                type: 'data'
+                            };
                             postMessage({
                                 channel: e.data.channel,
-                                payload: res
+                                payload: payload
                             });
                         },
-                        function (err) {
+                        function (res) {
                             postMessage({
                                 channel: e.data.channel,
-                                error: err
+                                payload: {
+                                    type: 'error',
+                                    data: {
+                                        message: res.message,
+                                        stack: res.stack
+                                    }
+                                }
                             });
                         }
                     )
@@ -81,8 +91,13 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
                 this.run();
             }
         }
-        const { channel, payload, error } = e.data;
-        this.emit(channel, error, payload);
+        const { channel, payload } = e.data;
+        if (payload.type === 'error') {
+            const err = new Error(payload.data.message)
+            err.stack = payload.data.stack
+            payload.data = err
+        }
+        this.emit(channel, payload);
     }
 
     public run(): void {

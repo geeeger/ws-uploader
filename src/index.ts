@@ -5,12 +5,12 @@ import QeTagWorker from "./qetag/worker";
 import Http from "./http/index";
 import HttpClient from "./http/xhr";
 import WorkerClient from "./http/worker";
-import WorkerProvider from "./worker";
-import QeTagWorkerScript from './ws/qetag.bundle';
-import uploaderWorkerScript from './ws/uploader.bundle';
-import merge from 'lodash/merge';
+import WorkerProvider from "./worker/index";
+import QeTagWorkerScript from './qetag/worker-script';
+import uploaderWorkerScript from './http/worker-script';
+import merge from './third-parts/merge';
 import Chunk from "./core/chunk";
-import { AxiosResponse } from "axios";
+import { createThrottle } from "./core/utils";
 
 export enum STATUS {
     PENDING = 1,
@@ -67,36 +67,39 @@ interface UplaodConfig {
 let qetagWorkers: WorkerProvider;
 let uploaderWorkers: WorkerProvider;
 
-export type TokenInfo = {
-    identity?: string;
+export interface TokenInfo {
     uploadToken: string;
-    uploadUrl: string;
+    createInfo: UploadedFileInfo;
     type: string;
     filePath: string;
+    created: boolean;
+    partUploadUrl: string;
+    directUploadUrl: string;
 };
 
 export interface CreateFileResInfo {
     code?: string;
+    hash: string;
     response?: string;
     message?: string;
 }
 
-export type UploadedFileInfo = {
-    children: any[];
+export interface UploadedFileInfo {
     identity: string;
     hash: string;
-    userIdentity: number;
+    userIdentity: string;
     path: string;
     name: string;
     ext: string;
     size: string;
     mime: string;
+    deleted: boolean;
     parent: string;
     type: number;
     directory: boolean;
-    atime: number;
-    ctime: number;
-    mtime: number;
+    atime: string;
+    ctime: string;
+    mtime: string;
     version: number;
     locking: boolean;
     op: number;
@@ -105,20 +108,24 @@ export type UploadedFileInfo = {
     flag: number;
     uniqueIdentity: string;
     share: boolean;
+    downloadAddress: string;
+    unlockTime: string;
 }
 
-export interface TokenResult {
-    uploadInfo?: TokenInfo;
-    hashCached: boolean;
-    file?: UploadedFileInfo;
-};
+// export interface TokenResult {
+//     uploadInfo?: TokenInfo;
+//     hashCached: boolean;
+//     file?: UploadedFileInfo;
+// };
 
-export interface TokenResponse {
-    status: number;
-    result: TokenResult;
-    code: string;
-    success: boolean;
-}
+// export type TokenResult = TokenInfo | UploadedFileInfo;
+
+// export interface TokenResponse {
+//     status: number;
+//     result: TokenResult;
+//     code: string;
+//     success: boolean;
+// }
 
 export interface BPutResponse{
     ctx: string;
@@ -130,21 +137,21 @@ export interface BPutResponse{
 }
 
 export type FileProps = {
-    identity: string;
-    override: boolean;
+    path: string;
+    parent: string;
+    op: number;
 } | any;
 
 export class WebFile {
     static default = {
         clientConfig: {
             baseURL: 'https://api.6pan.cn',
-            timeout: 60000,
             headers: {
                 'Content-Type': 'application/json'
             }
         },
         apis: {
-            token: '/v2/upload/token',
+            token: '/v3/file/uploadToken',
             mkblk: '/mkblk/',
             bput: '/bput/',
             mkfile: '/mkfile/'
@@ -192,17 +199,17 @@ export class WebFile {
     status: STATUS = STATUS.PENDING;
     sizeStr: string;
     tokenInfo: TokenInfo = {
-        uploadUrl: '',
-        uploadToken: '',
-        type: '',
-        filePath: ''
+        uploadToken: "",
+        createInfo: {} as UploadedFileInfo,
+        type: "",
+        filePath: "",
+        created: false,
+        partUploadUrl: "https://upload-v1.6pan.cn",
+        directUploadUrl: "https://upload-v1.6pan.cn/file/upload"
     };
     pos: any[] = [];
     constructor (file: File, fileProps: FileProps = {}, config: UplaodConfig = {}) {
-        this.props = Object.assign({
-            identity: '',
-            override: false
-        }, fileProps);
+        this.props = fileProps;
         if (config.adapter) {
             if (!(config.adapter in QeTag)) {
                 delete config.adapter
@@ -267,10 +274,8 @@ export class WebFile {
     }
 
     public isExisted(): boolean {
-        if (this.tokenInfo) {
-            if (this.tokenInfo.identity) {
-                return true;
-            }
+        if (this.normalFile) {
+            return true;
         }
         return false;
     }
@@ -283,8 +288,11 @@ export class WebFile {
             this.http = new Http[this.config.adapter]({
                 workers: uploaderWorkers
             });
+            const throttle = createThrottle(1000)
             this.http.on(Http.Base.Events.UpdateProgress, (bytes: number) => {
-                this.setProgress(bytes);
+                throttle(() => {
+                    this.setProgress(bytes)
+                });
             })
         }
         return this.http;
@@ -303,23 +311,37 @@ export class WebFile {
         return {};
     }
 
-    public async getTokenInfo(): Promise<TokenResult> {
+    public async getTokenInfo(): Promise<TokenInfo> {
         const http = this._http();
-        const result = await http.post<TokenResponse>({
-            url: WebFile.default.apis.token,
-            data: {
-                hash: this.getHashSync(),
-                path: this.props.identity,
-                name: this.file.name,
-                override: this.props.override
-            },
+
+        const params: {
+            [key: string]: any;
+        } = {
+            hash: this.getHashSync(),
+            name: this.file.name,
+            op: this.props.op || 0
+        }
+
+        if (this.props.path) {
+            params.path = this.props.path
+        }
+
+        if (this.props.parent) {
+            params.parent = this.props.parent
+        }
+        const result = await http.post<any>({
+            url: WebFile.default.clientConfig.baseURL + WebFile.default.apis.token,
+            data: JSON.stringify(params),
+            credentials: 'include',
             config: merge({}, WebFile.default.clientConfig, this._getDefaultRequestHeader())
+        }).then(json => {
+            if (json.success === false) {
+                throw new Error(json.message)
+            }
+            return json
         })
 
-        if (result.data.success) {
-            return result.data.result;
-        }
-        throw new Error(result.data.code);
+        return result
     }
 
 
@@ -380,16 +402,25 @@ export class WebFile {
         return this.error;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public setProgress(byte: number): void {
         const now = new Date().getTime();
-        const { blockSize, chunkSize } = WebFile.default;
-        const bytesUploading = this.pos
-            .filter(pos => pos.status === STATUS.UPLOADING)
-            .map(pos => this.ctx[pos.index])
-            .filter(ctx => ctx && ctx.length)
-            .map(ctx => ctx.length)
-            .reduce((a, b) => a + b, 0) * chunkSize;
-        const bytesUploaded = this.ctx.length * blockSize + bytesUploading + byte;
+        const { chunkSize } = WebFile.default;
+        // const bytesUploading = this.pos
+        //     .filter(pos => pos.status === STATUS.UPLOADING)
+        //     .map(pos => this.ctx[pos.index])
+        //     .filter(ctx => ctx && ctx.length)
+        //     .map(ctx => ctx.length)
+        //     .reduce((a, b) => a + b, 0) * chunkSize;
+        const bytesUploading = Object.keys(this.ctx)
+            .map(index => {
+                const ctx = this.ctx[index]
+                if (ctx && ctx.length) {
+                    return ctx.length
+                }
+                return 0
+            }).reduce((a, b) => a + b, 0)
+        const bytesUploaded = bytesUploading * chunkSize;
         
         if (this.lastProgress.time) {
             this.bytesPreSecond = Math.floor((bytesUploaded - this.lastProgress.size) / ((now - this.lastProgress.time) / 1000));
@@ -401,9 +432,18 @@ export class WebFile {
             size: bytesUploaded
         }
 
-        this.progress = parseFloat((bytesUploaded * 100 / this.file.size).toFixed(2));
+        let progress = parseFloat((bytesUploaded * 100 / this.file.size).toFixed(2));
 
-        if (this.bytesPreSecond > 0) {
+        if (progress > 100) {
+            progress = 100
+        }
+
+        this.progress = progress
+
+        if (
+            this.bytesPreSecond >= 0 &&
+            this.isUploading()
+        ) {
             this.setStatus(STATUS.UPLOADING);
         }
     }
@@ -453,10 +493,21 @@ export class WebFile {
     }
 
     public resume(): Promise<any> {
+        if (this.isFailed()) {
+            this.restTryCount();
+            return this.upload();
+        }
         if (this.isPaused()) {
             return this.upload();
         }
+        if (this.isCancel()) {
+            return Promise.reject(new Error(`Error: Uploader destoryed`))
+        }
         return Promise.reject(new Error(`Warning: Uploading`));
+    }
+
+    public restTryCount(): void {
+        this.tryCount = 0
     }
 
     public cancel(): Promise<any> {
@@ -464,13 +515,12 @@ export class WebFile {
         return Promise.resolve();
     }
 
-    public setFileInfo(info: TokenResult): void {
-        if (info.file) {
-            this.tokenInfo.identity = info.file.identity;
-            this.normalFile = info.file;
+    public setFileInfo(info: TokenInfo): void {
+        if (info.created) {
+            this.setNormalFile(info.createInfo)
         }
-        else if (info.uploadInfo) {
-            this.tokenInfo = info.uploadInfo;
+        else {
+            this.tokenInfo = info
         }
     }
 
@@ -482,8 +532,8 @@ export class WebFile {
             this.setStatus(STATUS.CALCULATING);
             await this.getHash();
             this.setStatus(STATUS.PREPARING);
-            const tokenInfo = await this.getTokenInfo();
-            this.setFileInfo(tokenInfo);
+            const result = await this.getTokenInfo();
+            this.setFileInfo(result);
             if (this.isExisted()) {
                 this.setStatus(STATUS.DONE);
                 return;
@@ -495,8 +545,8 @@ export class WebFile {
             this.start();
         }
         catch (e) {
-            this.setStatus(STATUS.FAILED);
             this.recordError(e);
+            this.setStatus(STATUS.FAILED);
         }
     }
 
@@ -521,22 +571,22 @@ export class WebFile {
             }
         }
         catch (e) {
-            this.setStatus(STATUS.FAILED);
             this.recordError(e);
+            this.setStatus(STATUS.FAILED);
             return;
         }
         
         try {
             if (this.ctx.length === this.file.getBlocks().length) {
-                const { data }: any = await this.createFile();
+                const data = await this.createFile();
                 if (data.code) {
                     throw new Error(`Create: ${data.message}`);
                 }
-                if (data.hash !== this.getHashSync()) {
+                const res = JSON.parse(data.response as string) as UploadedFileInfo;
+                if (res.hash !== this.getHashSync()) {
                     throw new Error(`Warning: File check failed`);
                 }
-                const uploadResult = JSON.parse(data.response).result as UploadedFileInfo;
-                this.setNormalFile(uploadResult);
+                this.setNormalFile(res);
                 this.setStatus(STATUS.DONE);
                 return;
             }
@@ -547,9 +597,9 @@ export class WebFile {
             });
         }
         catch (e) {
+            this.recordError(e);
             this.markTry();
             this.start();
-            this.recordError(e);
             return;
         }
     }
@@ -558,20 +608,21 @@ export class WebFile {
         this.normalFile = file;
     }
 
-    public createFile(): Promise<AxiosResponse<CreateFileResInfo>> {
+    public createFile(): Promise<CreateFileResInfo> {
         const http = this._http();
         const {
             clientConfig,
             apis
         } = WebFile.default;
-        return http.post({
-            url: apis.mkfile + this.file.size,
+        return http.post<any>({
+            url: this.tokenInfo.partUploadUrl + apis.mkfile + this.file.size,
             data: Array.from(this.ctx).map(ctx => ctx[ctx.length - 1]).toString(),
+            credentials: 'omit',
             config: merge(
                 {},
                 clientConfig,
                 {
-                    baseURL: this.tokenInfo.uploadUrl,
+                    baseURL: this.tokenInfo.partUploadUrl,
                     headers: {
                         'Authorization': this.tokenInfo.uploadToken,
                         'UploadBatch': this.file.batch,
@@ -609,11 +660,11 @@ export class WebFile {
             promise = promise
                 .then((ctx: any) => this.chunkUpload(chunk, ctx))
                 .then((res) => {
-                    if (res.data.code) {
-                        throw new Error(`Chunk: ${res.data.message}`);
+                    if (res.code) {
+                        throw new Error(`Chunk: ${res.message}`);
                     }
-                    this.setCtx(res.data.ctx, chunk)
-                    return res.data.ctx;
+                    this.setCtx(res.ctx, chunk)
+                    return res.ctx;
                 })
         }
         return promise
@@ -629,9 +680,9 @@ export class WebFile {
         }
         catch (e) {
             info.status = STATUS.PENDING;
+            this.recordError(e);
             this.removeCtx(info.index);
             this.markTry();
-            this.recordError(e);
             this.start();
         }
     }
@@ -650,7 +701,7 @@ export class WebFile {
         }
     }
 
-    public chunkUpload(chunk: Chunk, ctx?: string): Promise<AxiosResponse<BPutResponse>> {
+    public chunkUpload(chunk: Chunk, ctx?: string): Promise<BPutResponse> {
         const http = this._http();
         const {
             clientConfig,
@@ -659,11 +710,12 @@ export class WebFile {
         const config = {
             url: '',
             data: chunk.blob,
+            credentials: 'omit' as 'omit',
             config: merge(
                 {},
                 clientConfig,
                 {
-                    baseURL: this.tokenInfo.uploadUrl,
+                    baseURL: this.tokenInfo.partUploadUrl,
                     headers: {
                         'Authorization': this.tokenInfo.uploadToken,
                         'UploadBatch': this.file.batch,
@@ -680,10 +732,12 @@ export class WebFile {
             config.url = `${apis.bput}${ctx}/${chunk.startByte}`;
         }
 
-        return http.post<BPutResponse>(config, {
+        config.url = this.tokenInfo.partUploadUrl + config.url;
+
+        return http.post<any>(config, {
             isTransferablesSupported: WorkerProvider.isTransferablesSupported(),
             isEmitEvent: true
-        });
+        })
     }
 }
 

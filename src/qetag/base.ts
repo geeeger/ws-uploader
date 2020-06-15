@@ -1,8 +1,8 @@
 import Interface from "../../types/interface";
 import { EventEmitter } from "events";
+
 export default class QETagBase extends EventEmitter implements Interface.QETagBase {
 
-    public static Promise: PromiseConstructor & PromiseConstructorLike = Promise;
     public static Events = {
         UpdateProgress: 'UpdateProgress'
     };

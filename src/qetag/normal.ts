@@ -1,13 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
-import { WordArray } from "crypto-js";
-import Base64 from "crypto-js/enc-base64";
-import LibWordArray from "crypto-js/lib-typedarrays";
-import SHA1 from "crypto-js/sha1";
-import log2 from "math-log2";
-import throat from "throat";
+import throat from "../third-parts/throat";
 import QETagBase from "./base";
 import Interface from "../../types/interface";
+import { concatBuffer, arrayBufferToBase64, urlSafeBase64 } from "../core/utils";
 
 export default class QETagNormal extends QETagBase implements Interface.QETagNormal {
     public concurrency: number;
@@ -17,14 +13,12 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
         this.concurrency = window.navigator.hardwareConcurrency || 1;
     }
 
-    public loadNext(block: Interface.Block): PromiseLike<WordArray> {
-        const Promise = QETagNormal.Promise;
+    public loadNext(block: Interface.Block): Promise<ArrayBuffer> {
         return new Promise((resolve, reject): void => {
             const fr = new FileReader();
-            fr.onload = (): void => {
+            fr.onload = async (): Promise<any> => {
                 if (fr.result) {
-                    const wordarray = LibWordArray.create(fr.result);
-                    const sha1 = SHA1(wordarray);
+                    const sha1 = await window.crypto.subtle.digest('SHA-1', fr.result as ArrayBuffer)
                     resolve(sha1);
                 } else {
                     reject(new Error("Read file error!"));
@@ -41,9 +35,13 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
     }
 
     public get({ isEmitEvent }: any = {}): Promise<string> {
-        const Promise = QETagNormal.Promise;
         if (this.hash) {
             return Promise.resolve(this.hash);
+        }
+        if (!window.crypto.subtle) {
+            const error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
+            // console.error(error);
+            return Promise.reject(error);
         }
         const blocks = this.file.getBlocks();
         const blocksLength = blocks.length;
@@ -51,7 +49,7 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
         return Promise.all(
             blocks
                 // @ts-ignore
-                .map(throat(Promise).apply(this, [this.concurrency, (block: Interface.Block): PromiseLike<WordArray> => {
+                .map(throat(Promise).apply(this, [this.concurrency, (block: Interface.Block): Promise<ArrayBuffer> => {
                     return this.loadNext(block).then(sha1 => {
                         hashsLength++;
                         this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
@@ -60,27 +58,24 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
                     });
                 }])),
         )
-            .then((hashs: any[]): string => {
-                let perfex = log2(this.file.blockSize);
+            .then(async (hashs: any[]): Promise<any> => {
+                let perfex = Math.log2(this.file.blockSize);
                 const isSmallFile = hashs.length === 1;
                 let hash = null;
                 if (isSmallFile) {
                     hash = hashs[0];
                 } else {
                     perfex = 0x80 | perfex;
-                    hash = hashs.reduce((a, b): WordArray[] => a.concat(b));
-                    hash = SHA1(hash);
+                    hash = hashs.reduce((a, b): ArrayBuffer => concatBuffer(a, b));
+                    hash = await window.crypto.subtle.digest('SHA-1', hash);
                 }
                 const byte = new ArrayBuffer(1);
                 const dv = new DataView(byte);
                 dv.setUint8(0, perfex);
-                hash = LibWordArray.create(byte).concat(hash);
-                hash = hash
-                    .toString(Base64)
-                    .replace(/\//g, "_")
-                    .replace(/\+/g, "-");
+                hash = concatBuffer(byte, hash);
+                hash = arrayBufferToBase64(hash);
 
-                this.hash = hash;
+                this.hash = urlSafeBase64(hash) + this.file.size.toString(36);
                 return hash;
             });
     }

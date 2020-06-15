@@ -77,6 +77,7 @@
     "./scripts",
     "./node_modules",
     "./lib",
-    "./test"
+    "./test",
+    "./example"
   ]
 }

@@ -24,7 +24,6 @@ CV.WebFile.config({
     // 默认如下，非必须
     clientConfig: {
         baseURL: 'https://api.6pan.cn',
-        timeout: 60000,
         headers: {
             'Content-Type': 'application/json'
         }

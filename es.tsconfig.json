@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+      "target": "es6",
+      "lib": [
+        "ESNext",
+        "DOM"
+      ],
+      "module": "amd",
+      "allowJs": true,
+      "outFile": "./example/build.js",
+      "rootDir": "./src",
+      "removeComments": true,
+      "strict": true,
+      "typeRoots": [
+        "./node_modules/@types",
+        "./types"
+      ],
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true
+    },
+    "exclude": [
+      "./webworker-script",
+      "./scripts",
+      "./node_modules",
+      "./lib",
+      "./test",
+      "./example"
+    ]
+  }
+  

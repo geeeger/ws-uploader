@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-import { AxiosResponse } from "axios";
 
 interface MyWorker {
     tasks: number;
@@ -46,7 +45,7 @@ interface QZFile {
 }
 
 interface HttpClient {
-    post: <T>(props: HttpClientProps, extrnal1?: any) => Promise<AxiosResponse<T>>
+    post: <T>(props: HttpClientProps, extrnal1?: any) => Promise<T>;
 }
 
 interface QZFileProps {
@@ -94,5 +93,6 @@ interface QETagWorker extends QETagBase {
 interface HttpClientProps {
     url: string;
     data: any;
-    config?: object;
+    config?: any;
+    credentials?: "include" | "omit" | "same-origin" | undefined;
 }
