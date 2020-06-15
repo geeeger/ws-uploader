@@ -17,6 +17,10 @@
         <a href="https://v3-beta.6pan.cn/files/all/">登录</a>
     </div>
     <div>
+        <button id="worker">使用worker</button>
+        <button id="normal">使用一般模式</button>
+    </div>
+    <div>
         状态
         <div id="status"></div>
     </div>
@@ -46,6 +50,15 @@ require(['index'], function (a) {
     var restart = document.querySelector('#start');
     var cancel = document.querySelector('#cancel');
 
+    var type = 'Normal';
+
+    document.querySelector('#worker').addEventListener('click', () => {
+        type = 'Worker'
+    }, false);
+
+    document.querySelector('#normal').addEventListener('click', () => {
+        type = 'Normal'
+    }, false);
     var f;
     // 全局设置
     WebFile.config({
@@ -106,7 +119,7 @@ require(['index'], function (a) {
             }, {
                 // 启用何种工具进行hash或upload操作
                 // 只有两种 Normal Worker
-                adapter: 'Normal',
+                adapter: type,
                 onStatusChange: (ctx, status) => {
                     var info = {
                         ...ctx,
