@@ -1,6 +1,6 @@
 {
   "name": "@geeeger/ws-uploader",
-  "version": "0.1.0",
+  "version": "1.0.0-0",
   "files": [
     "lib/",
     "example/"
