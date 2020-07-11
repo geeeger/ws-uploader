@@ -64,9 +64,9 @@ export default class QETagWorker extends QETagBase implements Interface.QETagWor
                         result = concatBuffer(byte, result);
                         result = arrayBufferToBase64(result);
     
-                        this.hash = urlSafeBase64(result) + this.file.size.toString(36);
+                        const calcedhash = urlSafeBase64(result) + this.file.size.toString(36);
                         this.workers.removeAllListeners(this.channel);
-                        resolve(result);
+                        resolve(calcedhash);
                     }
                 });
                 blocks.forEach((block: Interface.Block): void => {
@@ -87,6 +87,7 @@ export default class QETagWorker extends QETagBase implements Interface.QETagWor
                 if (res === 'race-to-stop') {
                     this.workers.removeMessagesByChannel(this.channel);
                 }
+                this.hash = res;
                 return res;
             })
     }

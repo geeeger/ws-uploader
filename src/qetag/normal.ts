@@ -57,7 +57,12 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
                 blocks
                     // @ts-ignore
                     .map(throat(Promise).apply(this, [this.concurrency, (block: Interface.Block): Promise<ArrayBuffer> => {
-                        return this.loadNext(block).then(sha1 => {
+                        return Promise.race([
+                            racePromise.then(() => {
+                                throw new Error('Racing interrupted')
+                            }),
+                            this.loadNext(block)
+                        ]).then(sha1 => {
                             hashsLength++;
                             this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
                             isEmitEvent && this.emit(QETagNormal.Events.UpdateProgress, this.process);
@@ -82,9 +87,13 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
                     hash = concatBuffer(byte, hash);
                     hash = arrayBufferToBase64(hash);
     
-                    this.hash = urlSafeBase64(hash) + this.file.size.toString(36);
-                    return hash;
+                    const calcedhash = urlSafeBase64(hash) + this.file.size.toString(36);
+                    return calcedhash;
                 })
         ])
+            .then(res => {
+                this.hash = res;
+                return res;
+            })
     }
 }
