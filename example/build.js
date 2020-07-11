@@ -351,7 +351,8 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
                 fr.readAsArrayBuffer(block.blob);
             });
         }
-        get({ isEmitEvent } = {}) {
+        get({ isEmitEvent } = {}, racePromise = new Promise((res) => {
+        })) {
             if (this.hash) {
                 return Promise.resolve(this.hash);
             }
@@ -362,35 +363,38 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
             const blocks = this.file.getBlocks();
             const blocksLength = blocks.length;
             let hashsLength = 0;
-            return Promise.all(blocks
-                .map(throat_1.default(Promise).apply(this, [this.concurrency, (block) => {
-                    return this.loadNext(block).then(sha1 => {
-                        hashsLength++;
-                        this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
-                        isEmitEvent && this.emit(QETagNormal.Events.UpdateProgress, this.process);
-                        return sha1;
-                    });
-                }])))
-                .then((hashs) => __awaiter(this, void 0, void 0, function* () {
-                let perfex = Math.log2(this.file.blockSize);
-                const isSmallFile = hashs.length === 1;
-                let hash = null;
-                if (isSmallFile) {
-                    hash = hashs[0];
-                }
-                else {
-                    perfex = 0x80 | perfex;
-                    hash = hashs.reduce((a, b) => utils_2.concatBuffer(a, b));
-                    hash = yield window.crypto.subtle.digest('SHA-1', hash);
-                }
-                const byte = new ArrayBuffer(1);
-                const dv = new DataView(byte);
-                dv.setUint8(0, perfex);
-                hash = utils_2.concatBuffer(byte, hash);
-                hash = utils_2.arrayBufferToBase64(hash);
-                this.hash = utils_2.urlSafeBase64(hash) + this.file.size.toString(36);
-                return hash;
-            }));
+            return Promise.race([
+                racePromise,
+                Promise.all(blocks
+                    .map(throat_1.default(Promise).apply(this, [this.concurrency, (block) => {
+                        return this.loadNext(block).then(sha1 => {
+                            hashsLength++;
+                            this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
+                            isEmitEvent && this.emit(QETagNormal.Events.UpdateProgress, this.process);
+                            return sha1;
+                        });
+                    }])))
+                    .then((hashs) => __awaiter(this, void 0, void 0, function* () {
+                    let perfex = Math.log2(this.file.blockSize);
+                    const isSmallFile = hashs.length === 1;
+                    let hash = null;
+                    if (isSmallFile) {
+                        hash = hashs[0];
+                    }
+                    else {
+                        perfex = 0x80 | perfex;
+                        hash = hashs.reduce((a, b) => utils_2.concatBuffer(a, b));
+                        hash = yield window.crypto.subtle.digest('SHA-1', hash);
+                    }
+                    const byte = new ArrayBuffer(1);
+                    const dv = new DataView(byte);
+                    dv.setUint8(0, perfex);
+                    hash = utils_2.concatBuffer(byte, hash);
+                    hash = utils_2.arrayBufferToBase64(hash);
+                    this.hash = utils_2.urlSafeBase64(hash) + this.file.size.toString(36);
+                    return hash;
+                }))
+            ]);
         }
     }
     exports.default = QETagNormal;
@@ -405,7 +409,8 @@ define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], funct
             this.workers = opts.workers;
             this.channel = utils_3.guid();
         }
-        get({ isTransferSupported, isEmitEvent } = {}) {
+        get({ isTransferSupported, isEmitEvent } = {}, racePromise = new Promise((res) => {
+        })) {
             if (this.hash) {
                 return Promise.resolve(this.hash);
             }
@@ -415,54 +420,63 @@ define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], funct
             }
             this.workers.removeMessagesByChannel(this.channel);
             this.workers.removeAllListeners(this.channel);
-            return new Promise((resolve, reject) => {
-                const blocks = this.file.getBlocks();
-                const blocksLength = blocks.length;
-                const hashs = [];
-                let hashsLength = 0;
-                this.workers.on(this.channel, (payload) => __awaiter(this, void 0, void 0, function* () {
-                    if (payload.type === 'error') {
-                        this.workers.removeAllListeners(this.channel);
-                        reject(new Error(payload.data));
-                    }
-                    hashs[payload.data.index] = payload.data.sha1;
-                    hashsLength++;
-                    this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
-                    isEmitEvent && this.emit(QETagWorker.Events.UpdateProgress, this.process);
-                    if (hashsLength === blocksLength) {
-                        let perfex = Math.log2(this.file.blockSize);
-                        const isSmallFile = hashsLength === 1;
-                        let result = null;
-                        if (isSmallFile) {
-                            result = hashs[0];
+            return Promise.race([
+                racePromise,
+                new Promise((resolve, reject) => {
+                    const blocks = this.file.getBlocks();
+                    const blocksLength = blocks.length;
+                    const hashs = [];
+                    let hashsLength = 0;
+                    this.workers.on(this.channel, (payload) => __awaiter(this, void 0, void 0, function* () {
+                        if (payload.type === 'error') {
+                            this.workers.removeAllListeners(this.channel);
+                            reject(new Error(payload.data));
                         }
-                        else {
-                            perfex = 0x80 | perfex;
-                            result = hashs.reduce((a, b) => utils_3.concatBuffer(a, b));
-                            result = yield window.crypto.subtle.digest('SHA-1', result);
+                        hashs[payload.data.index] = payload.data.sha1;
+                        hashsLength++;
+                        this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
+                        isEmitEvent && this.emit(QETagWorker.Events.UpdateProgress, this.process);
+                        if (hashsLength === blocksLength) {
+                            let perfex = Math.log2(this.file.blockSize);
+                            const isSmallFile = hashsLength === 1;
+                            let result = null;
+                            if (isSmallFile) {
+                                result = hashs[0];
+                            }
+                            else {
+                                perfex = 0x80 | perfex;
+                                result = hashs.reduce((a, b) => utils_3.concatBuffer(a, b));
+                                result = yield window.crypto.subtle.digest('SHA-1', result);
+                            }
+                            const byte = new ArrayBuffer(1);
+                            const dv = new DataView(byte);
+                            dv.setUint8(0, perfex);
+                            result = utils_3.concatBuffer(byte, result);
+                            result = utils_3.arrayBufferToBase64(result);
+                            this.hash = utils_3.urlSafeBase64(result) + this.file.size.toString(36);
+                            this.workers.removeAllListeners(this.channel);
+                            resolve(result);
                         }
-                        const byte = new ArrayBuffer(1);
-                        const dv = new DataView(byte);
-                        dv.setUint8(0, perfex);
-                        result = utils_3.concatBuffer(byte, result);
-                        result = utils_3.arrayBufferToBase64(result);
-                        this.hash = utils_3.urlSafeBase64(result) + this.file.size.toString(36);
-                        this.workers.removeAllListeners(this.channel);
-                        resolve(result);
-                    }
-                }));
-                blocks.forEach((block) => {
-                    const opts = isTransferSupported ? {
-                        transfer: [block.blob]
-                    } : undefined;
-                    this.workers.send({
-                        channel: this.channel,
-                        payload: {
-                            blob: block.blob,
-                            index: block.index,
-                        },
-                    }, opts);
-                });
+                    }));
+                    blocks.forEach((block) => {
+                        const opts = isTransferSupported ? {
+                            transfer: [block.blob]
+                        } : undefined;
+                        this.workers.send({
+                            channel: this.channel,
+                            payload: {
+                                blob: block.blob,
+                                index: block.index,
+                            },
+                        }, opts);
+                    });
+                })
+            ])
+                .then(res => {
+                if (res === 'race-to-stop') {
+                    this.workers.removeMessagesByChannel(this.channel);
+                }
+                return res;
             });
         }
     }
@@ -968,7 +982,7 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
             }
             return this.qetag;
         }
-        getHash() {
+        getHash(raceFunction) {
             const qetag = this._qetag();
             if (qetag.isExist()) {
                 return Promise.resolve(qetag.getSync());
@@ -976,7 +990,7 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
             return qetag.get({
                 isTransferablesSupported: index_3.default.isTransferablesSupported(),
                 isEmitEvent: true
-            });
+            }, raceFunction);
         }
         getHashSync() {
             const qetag = this._qetag();
@@ -1062,6 +1076,7 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
         }
         setStatus(status) {
             this.status = status;
+            const qetag = this._qetag();
             switch (status) {
                 case STATUS.CALCULATING:
                     break;
@@ -1072,6 +1087,7 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                     if (this.qetag) {
                         this.qetag.removeAllListeners();
                     }
+                    qetag.emit('race-to-stop');
                     break;
                 case STATUS.DONE:
                     this.progress = 100;
@@ -1086,6 +1102,7 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                     break;
                 case STATUS.PAUSE:
                     this.tryCount = 0;
+                    qetag.emit('race-to-stop');
                     break;
                 case STATUS.PENDING:
                     this.tryCount = 0;
@@ -1201,7 +1218,19 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                 }
                 try {
                     this.setStatus(STATUS.CALCULATING);
-                    yield this.getHash();
+                    const qetag = this._qetag();
+                    qetag.removeAllListeners('race-to-stop');
+                    let resolveRefs;
+                    qetag.on('race-to-stop', () => {
+                        resolveRefs && resolveRefs('race-to-stop');
+                    });
+                    yield this.getHash(new Promise((resolve) => {
+                        resolveRefs = resolve;
+                    }));
+                    if (qetag.getSync() === 'race-to-stop') {
+                        qetag.set('');
+                        return;
+                    }
                     this.setStatus(STATUS.PREPARING);
                     const result = yield this.getTokenInfo();
                     this.setFileInfo(result);
