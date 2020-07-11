@@ -367,7 +367,12 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
                 racePromise,
                 Promise.all(blocks
                     .map(throat_1.default(Promise).apply(this, [this.concurrency, (block) => {
-                        return this.loadNext(block).then(sha1 => {
+                        return Promise.race([
+                            racePromise.then(() => {
+                                throw new Error('Racing interrupted');
+                            }),
+                            this.loadNext(block)
+                        ]).then(sha1 => {
                             hashsLength++;
                             this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
                             isEmitEvent && this.emit(QETagNormal.Events.UpdateProgress, this.process);
@@ -391,10 +396,14 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
                     dv.setUint8(0, perfex);
                     hash = utils_2.concatBuffer(byte, hash);
                     hash = utils_2.arrayBufferToBase64(hash);
-                    this.hash = utils_2.urlSafeBase64(hash) + this.file.size.toString(36);
-                    return hash;
+                    const calcedhash = utils_2.urlSafeBase64(hash) + this.file.size.toString(36);
+                    return calcedhash;
                 }))
-            ]);
+            ])
+                .then(res => {
+                this.hash = res;
+                return res;
+            });
         }
     }
     exports.default = QETagNormal;
@@ -453,9 +462,9 @@ define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], funct
                             dv.setUint8(0, perfex);
                             result = utils_3.concatBuffer(byte, result);
                             result = utils_3.arrayBufferToBase64(result);
-                            this.hash = utils_3.urlSafeBase64(result) + this.file.size.toString(36);
+                            const calcedhash = utils_3.urlSafeBase64(result) + this.file.size.toString(36);
                             this.workers.removeAllListeners(this.channel);
-                            resolve(result);
+                            resolve(calcedhash);
                         }
                     }));
                     blocks.forEach((block) => {
@@ -476,6 +485,7 @@ define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], funct
                 if (res === 'race-to-stop') {
                     this.workers.removeMessagesByChannel(this.channel);
                 }
+                this.hash = res;
                 return res;
             });
         }
