@@ -766,11 +766,11 @@ define("http/worker-script", ["require", "exports"], function (require, exports)
             method: 'POST',
             mode: 'cors',
             credentials: payload.credentials,
-            headers: Object.assign({}, (payload.config
+            headers: payload.config
                 ? payload.config.headers
                     ? payload.config.headers
                     : {}
-                : {}))
+                : {}
         }).then(response => response.json())
             .then(response => {
             if (isBlob) {
