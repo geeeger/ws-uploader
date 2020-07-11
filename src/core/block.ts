@@ -1,4 +1,4 @@
-import Interface from "../../types/interface";
+import Interface from "../interface";
 import Chunk from "./chunk";
 import QZFile from "./file";
 

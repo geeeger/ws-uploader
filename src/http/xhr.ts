@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import Interface, { HttpClientProps } from '../../types/interface';
+import Interface, { HttpClientProps } from '../interface';
 import { guid } from '../core/utils';
 import HttpClient from './base';
 

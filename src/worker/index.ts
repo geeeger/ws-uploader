@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import Interface from "../../types/interface";
+import Interface from "../interface";
 
 export default class WorkerProvider extends EventEmitter implements Interface.WorkersProvider {
     taskConcurrency: number;

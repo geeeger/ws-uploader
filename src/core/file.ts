@@ -1,4 +1,4 @@
-import Interface from "../../types/interface";
+import Interface from "../interface";
 
 import Block from "./block";
 import { guid } from "./utils";

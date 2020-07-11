@@ -1,5 +1,5 @@
 import QETagBase from "./base";
-import Interface from "../../types/interface";
+import Interface from "../interface";
 import { guid, concatBuffer, arrayBufferToBase64, urlSafeBase64 } from "../core/utils";
 
 export default class QETagWorker extends QETagBase implements Interface.QETagWorker {
