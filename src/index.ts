@@ -248,7 +248,7 @@ export class WebFile {
         return this.qetag;
     }
 
-    public getHash(): Promise<string> {
+    public getHash(raceFunction: Promise<string>): Promise<string> {
         const qetag = this._qetag();
         if (qetag.isExist()) {
             return Promise.resolve(qetag.getSync());
@@ -256,7 +256,7 @@ export class WebFile {
         return qetag.get({
             isTransferablesSupported: WorkerProvider.isTransferablesSupported(),
             isEmitEvent: true
-        });
+        }, raceFunction);
     }
 
     public getHashSync(): string {
@@ -356,6 +356,7 @@ export class WebFile {
 
     public setStatus(status: STATUS): void {
         this.status = status;
+        const qetag = this._qetag();
         switch (status) {
             case STATUS.CALCULATING:
                 // todo
@@ -367,6 +368,7 @@ export class WebFile {
                 if (this.qetag) {
                     this.qetag.removeAllListeners();
                 }
+                qetag.emit('race-to-stop');
                 break;
             case STATUS.DONE:
                 this.progress = 100;
@@ -382,6 +384,7 @@ export class WebFile {
                 break;
             case STATUS.PAUSE:
                 this.tryCount = 0;
+                qetag.emit('race-to-stop');
                 break;
             case STATUS.PENDING:
                 this.tryCount = 0;
@@ -530,7 +533,19 @@ export class WebFile {
         }
         try {
             this.setStatus(STATUS.CALCULATING);
-            await this.getHash();
+            const qetag = this._qetag()
+            qetag.removeAllListeners('race-to-stop')
+            let resolveRefs: any;
+            qetag.on('race-to-stop', () => {
+                resolveRefs && resolveRefs('race-to-stop')
+            })
+            await this.getHash(new Promise((resolve) => {
+                resolveRefs = resolve
+            }));
+            if (qetag.getSync() === 'race-to-stop') {
+                qetag.set('')
+                return;
+            }
             this.setStatus(STATUS.PREPARING);
             const result = await this.getTokenInfo();
             this.setFileInfo(result);

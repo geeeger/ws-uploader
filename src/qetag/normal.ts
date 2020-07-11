@@ -34,7 +34,12 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
         });
     }
 
-    public get({ isEmitEvent }: any = {}): Promise<string> {
+    public get(
+        { isEmitEvent }: any = {},
+        racePromise: Promise<string> = new Promise((res) => {
+            // do nothing
+        })
+    ): Promise<string> {
         if (this.hash) {
             return Promise.resolve(this.hash);
         }
@@ -46,37 +51,40 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
         const blocks = this.file.getBlocks();
         const blocksLength = blocks.length;
         let hashsLength = 0;
-        return Promise.all(
-            blocks
-                // @ts-ignore
-                .map(throat(Promise).apply(this, [this.concurrency, (block: Interface.Block): Promise<ArrayBuffer> => {
-                    return this.loadNext(block).then(sha1 => {
-                        hashsLength++;
-                        this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
-                        isEmitEvent && this.emit(QETagNormal.Events.UpdateProgress, this.process);
-                        return sha1;
-                    });
-                }])),
-        )
-            .then(async (hashs: any[]): Promise<any> => {
-                let perfex = Math.log2(this.file.blockSize);
-                const isSmallFile = hashs.length === 1;
-                let hash = null;
-                if (isSmallFile) {
-                    hash = hashs[0];
-                } else {
-                    perfex = 0x80 | perfex;
-                    hash = hashs.reduce((a, b): ArrayBuffer => concatBuffer(a, b));
-                    hash = await window.crypto.subtle.digest('SHA-1', hash);
-                }
-                const byte = new ArrayBuffer(1);
-                const dv = new DataView(byte);
-                dv.setUint8(0, perfex);
-                hash = concatBuffer(byte, hash);
-                hash = arrayBufferToBase64(hash);
-
-                this.hash = urlSafeBase64(hash) + this.file.size.toString(36);
-                return hash;
-            });
+        return Promise.race([
+            racePromise,
+            Promise.all(
+                blocks
+                    // @ts-ignore
+                    .map(throat(Promise).apply(this, [this.concurrency, (block: Interface.Block): Promise<ArrayBuffer> => {
+                        return this.loadNext(block).then(sha1 => {
+                            hashsLength++;
+                            this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
+                            isEmitEvent && this.emit(QETagNormal.Events.UpdateProgress, this.process);
+                            return sha1;
+                        });
+                    }])),
+            )
+                .then(async (hashs: any[]): Promise<any> => {
+                    let perfex = Math.log2(this.file.blockSize);
+                    const isSmallFile = hashs.length === 1;
+                    let hash = null;
+                    if (isSmallFile) {
+                        hash = hashs[0];
+                    } else {
+                        perfex = 0x80 | perfex;
+                        hash = hashs.reduce((a, b): ArrayBuffer => concatBuffer(a, b));
+                        hash = await window.crypto.subtle.digest('SHA-1', hash);
+                    }
+                    const byte = new ArrayBuffer(1);
+                    const dv = new DataView(byte);
+                    dv.setUint8(0, perfex);
+                    hash = concatBuffer(byte, hash);
+                    hash = arrayBufferToBase64(hash);
+    
+                    this.hash = urlSafeBase64(hash) + this.file.size.toString(36);
+                    return hash;
+                })
+        ])
     }
 }
