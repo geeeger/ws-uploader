@@ -7,15 +7,11 @@ export default function handler(data: any): Promise<any> {
         method: 'POST',
         mode: 'cors',
         credentials: payload.credentials,
-        headers: {
-            ...(
-                payload.config
-                    ? payload.config.headers
-                        ? payload.config.headers
-                        : {}
-                    : {}
-            )
-        }
+        headers: payload.config
+            ? payload.config.headers
+                ? payload.config.headers
+                : {}
+            : {}
     }).then(response => response.json())
         .then(response => {
             if (isBlob) {
