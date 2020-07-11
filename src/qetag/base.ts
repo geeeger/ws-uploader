@@ -1,4 +1,4 @@
-import Interface from "../interface";
+import * as Interface from "../interface";
 import { EventEmitter } from "events";
 
 export default class QETagBase extends EventEmitter implements Interface.QETagBase {

@@ -1,4 +1,5 @@
-import Interface, { HttpClientProps } from "../interface";
+import * as Interface from "../interface";
+import { HttpClientProps } from "../interface";
 import { guid } from "../core/utils";
 import HttpClient from "./base";
 

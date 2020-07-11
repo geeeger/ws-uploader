@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
 import throat from "../third-parts/throat";
 import QETagBase from "./base";
-import Interface from "../interface";
+import * as Interface from "../interface";
 import { concatBuffer, arrayBufferToBase64, urlSafeBase64 } from "../core/utils";
 
 export default class QETagNormal extends QETagBase implements Interface.QETagNormal {

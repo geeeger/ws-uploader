@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import Interface from "../interface";
+import * as Interface from "../interface";
 import Block from "./block";
 
 export default class Chunk implements Interface.Chunk {

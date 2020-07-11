@@ -1,22 +1,22 @@
 import { EventEmitter } from "events";
 
-interface MyWorker {
+export interface MyWorker {
     tasks: number;
     buzy: boolean;
     instance: Worker;
 }
 
-interface WorkerMessage {
+export interface WorkerMessage {
     channel: string;
     payload?: any;
 }
 
-type WorkerMessages = [
+export type WorkerMessages = [
     WorkerMessage,
     PostMessageOptions?
 ];
 
-interface WorkersProvider extends EventEmitter {
+export interface WorkersProvider extends EventEmitter {
     workers: MyWorker[];
     cpus: number;
     messages: WorkerMessages[];
@@ -28,7 +28,7 @@ interface WorkersProvider extends EventEmitter {
     removeMessagesByChannel(channel: string): void;
 }
 
-interface QZFile {
+export interface QZFile {
     file: File;
     batch: string;
     blockSize: number;
@@ -44,18 +44,18 @@ interface QZFile {
     getBlockByIndex(index: number): Block;
 }
 
-interface HttpClient {
+export interface HttpClient {
     post: <T>(props: HttpClientProps, extrnal1?: any) => Promise<T>;
 }
 
-interface QZFileProps {
+export interface QZFileProps {
     file: File;
     blockSize?: number;
     chunkSize?: number;
     batch?: string;
 }
 
-interface Block {
+export interface Block {
     startByte: number;
     endByte: number;
     file: QZFile;
@@ -64,7 +64,7 @@ interface Block {
     blob: Blob;
 }
 
-interface Chunk {
+export interface Chunk {
     startByte: number;
     endByte: number;
     size: number;
@@ -73,7 +73,7 @@ interface Chunk {
     index: number;
 }
 
-interface QETagBase {
+export interface QETagBase {
     file: QZFile;
     hash: string;
     get?(): PromiseLike<string>;
@@ -81,16 +81,16 @@ interface QETagBase {
     getSync(): string;
 }
 
-interface QETagNormal extends QETagBase {
+export interface QETagNormal extends QETagBase {
     concurrency: number;
 }
 
-interface QETagWorker extends QETagBase {
+export interface QETagWorker extends QETagBase {
     channel: string;
     workers: WorkersProvider;
 }
 
-interface HttpClientProps {
+export interface HttpClientProps {
     url: string;
     data: any;
     config?: any;
