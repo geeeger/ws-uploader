@@ -9,6 +9,7 @@
 <div>
 <div>
     <input id="input" type="file">
+    <button id="mock">使用mockfile</button>
     <button id="button">上传</button>
     <button id="stop">停止</button>
     <button id="start">重新开始</button>
@@ -42,6 +43,7 @@
 <script src="./build.js"></script>
 <script>
 require(['index'], function (a) {
+    var mock = false;
     var { STATUS, WebFile } = a
     var t = document.querySelector('#status');
     var s = document.querySelector('#input');
@@ -49,6 +51,8 @@ require(['index'], function (a) {
     var pause = document.querySelector('#stop');
     var restart = document.querySelector('#start');
     var cancel = document.querySelector('#cancel');
+
+    var mockBtn = document.querySelector('#mock');
 
     var type = 'Normal';
 
@@ -59,7 +63,12 @@ require(['index'], function (a) {
     document.querySelector('#normal').addEventListener('click', () => {
         type = 'Normal'
     }, false);
-    var f;
+
+    document.querySelector('#mock').addEventListener('click', () => {
+        mock = true
+    }, false)
+
+    window.f = null;
     // 全局设置
     WebFile.config({
         // axios设置
@@ -105,11 +114,35 @@ require(['index'], function (a) {
         // 设置大了意义不大
         taskConcurrencyInWorkers: 3,
     })
+
+    function MockFile() { };
+
+    MockFile.prototype.create = function (name, size, mimeType) {
+        name = name || "mock.txt";
+        size = size || 1024;
+        mimeType = mimeType || 'plain/txt';
+
+        function range(count) {
+            var output = "";
+            for (var i = 0; i < count; i++) {
+                output += "a";
+            }
+            return output;
+        }
+
+        var blob = new Blob([range(size)], { type: mimeType });
+        blob.lastModifiedDate = new Date();
+        blob.name = name;
+
+        return blob;
+    };
+
+    var m = new MockFile()
     b.addEventListener('click', () => {
         var time = new Date();
         f = new WebFile(
             // 原始file对象
-            s.files[0],
+            mock ? m.create('test.txt', 10 * 1024 * 1024 + Math.floor(Math.random() * 10000)) : s.files[0],
             {
                 // path或parent参数,选其一
                 path: '/',
