@@ -30,6 +30,7 @@ describe('test core/utils.ts', () => {
     });
 
     it('test createThrottle()', async () => {
+        expect.assertions(2);
         const runner = api.createThrottle(100);
         const mockfn = jest.fn();
         const mockfn1 = jest.fn();
@@ -37,10 +38,10 @@ describe('test core/utils.ts', () => {
         runner(mockfn1);
         await new Promise((res) => {
             setTimeout(() => {
-                expect(mockfn).toBeCalledTimes(1);
-                expect(mockfn1).toBeCalledTimes(0);
                 res();
-            }, 120);
+            }, 110);
         });
+        expect(mockfn).toBeCalledTimes(1);
+        expect(mockfn1).toBeCalledTimes(0);
     })
 });

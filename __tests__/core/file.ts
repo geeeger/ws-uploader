@@ -1,4 +1,5 @@
 import QZFile from '../../src/core/file';
+import "../../scripts/setup.d";
 const blockSize = 4 * 1024 * 1024;
 const chunkSize = 1 * 1024 * 1024;
 

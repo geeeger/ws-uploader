@@ -32,6 +32,10 @@ export default class Block implements Interface.Block {
         return chunks;
     }
 
+    getChunkByIndex(index: number): Chunk {
+        return this.getChunks()[index];
+    }
+
     get size(): number {
         return this.endByte - this.startByte;
     }
