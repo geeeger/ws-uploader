@@ -12,15 +12,15 @@ export default class Chunk implements Interface.Chunk {
         this.endByte = endByte;
     }
 
-    get size() {
+    get size(): number {
         return this.endByte - this.startByte;
     }
 
-    get index() {
+    get index(): number {
         return Math.floor(this.startByte / this.block.file.chunkSize);
     }
 
-    get blob() {
+    get blob(): Blob {
         const block = this.block;
         const file = block.file;
         const offset = block.index * file.blockSize;

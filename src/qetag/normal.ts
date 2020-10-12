@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/ban-ts-ignore */
 import throat from "../third-parts/throat";
 import QETagBase from "./base";
 import * as Interface from "../interface";

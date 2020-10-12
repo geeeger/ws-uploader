@@ -15,7 +15,6 @@ export default function handler(data: any): Promise<any> {
     }).then(response => response.json())
         .then(response => {
             if (isBlob) {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
                 // @ts-ignore
                 postMessage({
                     channel: data.channel,

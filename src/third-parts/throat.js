@@ -110,4 +110,4 @@ export default function throat (PromiseArgument) {
         }
         return throat(arguments[0], arguments[1]);
     }
-};
+}
