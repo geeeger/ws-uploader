@@ -124,8 +124,8 @@ module.exports = {
 
     // The paths to modules that run some code to configure or set up the testing environment before each test
     setupFiles: [
-        "jest-fetch-mock",
-        "jsdom-worker",
+        // "jest-fetch-mock",
+        // "jsdom-worker",
         "./scripts/setup.ts"
     ],
 
