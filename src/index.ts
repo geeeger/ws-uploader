@@ -1,3 +1,4 @@
+import { HttpClientProps } from './interface';
 import QZFile from "./core/file";
 import QeTag from "./qetag/index";
 import QeTagNormal from "./qetag/normal";
@@ -61,6 +62,7 @@ interface UplaodConfig {
      * adapter
      */
     adapter?: AdapterType;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     onStatusChange?: Function;
 }
 
@@ -75,7 +77,7 @@ export interface TokenInfo {
     created: boolean;
     partUploadUrl: string;
     directUploadUrl: string;
-};
+}
 
 export interface CreateFileResInfo {
     code?: string;
@@ -193,6 +195,7 @@ export class WebFile {
     }
     http?: HttpClient | WorkerClient;
     file: QZFile;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     config: { adapter: AdapterType; onStatusChange: Function } & UplaodConfig;
     qetag?: QeTagNormal | QeTagWorker;
     hashCalcProgress = 0;
@@ -725,7 +728,7 @@ export class WebFile {
         const config = {
             url: '',
             data: chunk.blob,
-            credentials: 'omit' as 'omit',
+            credentials: 'omit',
             config: merge(
                 {},
                 clientConfig,
@@ -749,7 +752,7 @@ export class WebFile {
 
         config.url = this.tokenInfo.partUploadUrl + config.url;
 
-        return http.post<any>(config, {
+        return http.post<any>(config as HttpClientProps, {
             isTransferablesSupported: WorkerProvider.isTransferablesSupported(),
             isEmitEvent: true
         })

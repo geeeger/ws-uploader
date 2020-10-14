@@ -25,6 +25,7 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
             return !Boolean(buffer.byteLength);
         })();
     }
+    // eslint-disable-next-line @typescript-eslint/ban-types
     public static asyncFnMover(fn: Function): string {
         const blob = new Blob([`
             $$=${fn.toString()};
