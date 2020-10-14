@@ -1,14 +1,19 @@
 export default function handler(data: any): Promise<any> {
-    const payload = data.payload;
-    if (typeof FileReader === "undefined") {
-        return Promise.reject(new Error('FileReaderAPI not support'));
-    }
-
     return new Promise(function (resolve, reject) {
+        const payload = data.payload;
+        if (typeof FileReader === "undefined") {
+            reject(new Error('FileReaderAPI not support in WebWorkers'));
+        }
         const fr = new FileReader();
         fr.onload = function (): any {
             if (fr.result) {
-                self.crypto.subtle.digest('SHA-1', fr.result as ArrayBuffer)
+                if (typeof crypto === 'undefined') {
+                    reject(new Error('Crypto Api not support in WebWorkers'));
+                }
+                if (typeof crypto.subtle === 'undefined') {
+                    reject(new Error('Crypto.Subtle Api not support in WebWorkers'));
+                }
+                crypto.subtle.digest('SHA-1', fr.result as ArrayBuffer)
                     .then(sha1 => {
                         resolve({
                             sha1: sha1,

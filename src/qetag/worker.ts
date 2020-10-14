@@ -26,7 +26,6 @@ export default class QETagWorker extends QETagBase implements Interface.QETagWor
         }
         if (!window.crypto.subtle) {
             const error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
-            // console.error(error);
             return Promise.reject(error);
         }
         this.workers.removeMessagesByChannel(this.channel);

@@ -55,7 +55,7 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
             Promise.all(
                 blocks
                     // @ts-ignore
-                    .map(throat(Promise).apply(this, [this.concurrency, (block: Interface.Block): Promise<ArrayBuffer> => {
+                    .map(throat().apply(this, [this.concurrency, (block: Interface.Block): Promise<ArrayBuffer> => {
                         return Promise.race([
                             racePromise.then(() => {
                                 throw new Error('Racing interrupted')

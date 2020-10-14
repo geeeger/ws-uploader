@@ -29,30 +29,29 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
         const blob = new Blob([`
             $$=${fn.toString()};
             onmessage=function (e) {
-                $$(e.data).then(
-                        function (res) {
-                            var payload = {
-                                data: res,
-                                type: 'data'
-                            };
-                            postMessage({
-                                channel: e.data.channel,
-                                payload: payload
-                            });
-                        },
-                        function (res) {
-                            postMessage({
-                                channel: e.data.channel,
-                                payload: {
-                                    type: 'error',
-                                    data: {
-                                        message: res.message,
-                                        stack: res.stack
-                                    }
+                $$(e.data)
+                    .then(function (res) {
+                        var payload = {
+                            data: res,
+                            type: 'data'
+                        };
+                        postMessage({
+                            channel: e.data.channel,
+                            payload: payload
+                        });
+                    })
+                    .catch(function (res) {
+                        postMessage({
+                            channel: e.data.channel,
+                            payload: {
+                                type: 'error',
+                                data: {
+                                    message: res.message,
+                                    stack: res.stack
                                 }
-                            });
-                        }
-                    )
+                            }
+                        });
+                    })
             };
         `], {
             type: "text/javascript",
