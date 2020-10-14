@@ -75,4 +75,8 @@ export default class QZFile implements Interface.QZFile {
     public getBlockByIndex(index: number): Block {
         return this.getBlocks()[index];
     }
+
+    public getChunksSize(): number {
+        return this.getBlocks().map(block => block.getChunks().length).reduce((a, b) => a + b, 0)
+    }
 }
