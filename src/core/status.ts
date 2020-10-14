@@ -4,17 +4,41 @@ import { STATUS, TASK_STATUS_INFO, UPLOADING_STATUS } from "../constants/status"
 export * from '../constants/status';
 
 class Status {
-    status: STATUS
+    status: STATUS = STATUS.PENDING
+
     _statusHandlers: {
         [key: string]: Function
-    }
-    constructor() {
-        this.status = STATUS.PENDING
-        this._statusHandlers = {}
-    }
+    } = {}
+
+    progress = 0
+
+    tryCount = 0
+
+    error: Error[] = [];
 
     get statusInfo(): string {
         return TASK_STATUS_INFO[this.status];
+    }
+
+    restTryCount(): void {
+        this.tryCount = 0
+    }
+
+    getError(): Error[] {
+        return this.error;
+    }
+
+    recordError(e: Error): void {
+        this.error.push(e);
+    }
+
+    markTry(tryNum?: number): void {
+        if (tryNum) {
+            this.tryCount = tryNum;
+        }
+        else {
+            this.tryCount++;
+        }
     }
 
     addStatusHandler(status: STATUS, handler: Function): this {
