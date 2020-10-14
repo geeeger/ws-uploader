@@ -47,3 +47,17 @@ export function createThrottle(time: number): (fn: any) => void {
         }, time)
     }
 }
+
+export function sizeToStr(size: number): string {
+    if (size < 1024 * 1024) {
+        return (size / 1024).toFixed(2) + 'KB';
+    }
+    if (size < 1024 * 1024 * 1024) {
+        return (size / (1024 * 1024)).toFixed(2) + 'MB';
+    }
+
+    if (size < 1024 * 1024 * 1024 * 1024) {
+        return (size / (1024 * 1024 * 1024)).toFixed(2) + 'GB';
+    }
+    return '';
+}

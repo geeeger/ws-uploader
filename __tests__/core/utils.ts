@@ -44,4 +44,10 @@ describe('test core/utils.ts', () => {
         expect(mockfn).toBeCalledTimes(1);
         expect(mockfn1).toBeCalledTimes(0);
     })
+
+    it('test sizeToStr()', () => {
+        expect(api.sizeToStr(1024 * 1024 - 1)).toBe('1024.00KB')
+        expect(api.sizeToStr(1024 * 1024 * 1024 - 1)).toBe('1024.00MB')
+        expect(api.sizeToStr(1024 * 1024 * 1024 * 1024 - 1)).toBe('1024.00GB')
+    })
 });
