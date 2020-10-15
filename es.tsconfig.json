@@ -23,7 +23,10 @@
       "./node_modules",
       "./lib",
       "./test",
-      "./example"
+      "./example",
+      "./__tests__",
+      "./jest.config.js",
+      "./coverage"
     ]
   }
   

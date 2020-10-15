@@ -14,73 +14,10 @@ define("interface", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("core/chunk", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Chunk {
-        constructor(block, startByte, endByte) {
-            this.block = block;
-            this.startByte = startByte;
-            this.endByte = endByte;
-        }
-        get size() {
-            return this.endByte - this.startByte;
-        }
-        get index() {
-            return Math.floor(this.startByte / this.block.file.chunkSize);
-        }
-        get blob() {
-            const block = this.block;
-            const file = block.file;
-            const offset = block.index * file.blockSize;
-            return file.slice(offset + this.startByte, offset + this.endByte);
-        }
-    }
-    exports.default = Chunk;
-});
-define("core/block", ["require", "exports", "core/chunk"], function (require, exports, chunk_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    chunk_1 = __importDefault(chunk_1);
-    class Block {
-        constructor(file, startByte, endByte) {
-            this.file = file;
-            this.startByte = startByte;
-            this.endByte = endByte;
-            this.chunks = [];
-        }
-        getChunks() {
-            if (this.chunks.length) {
-                return this.chunks;
-            }
-            let startByte = 0;
-            const chunks = [];
-            while (startByte < this.size) {
-                let endByte = startByte + this.file.chunkSize;
-                if (endByte > this.size) {
-                    endByte = this.size;
-                }
-                chunks.push(new chunk_1.default(this, startByte, endByte));
-                startByte += this.file.chunkSize;
-            }
-            this.chunks = chunks;
-            return chunks;
-        }
-        get size() {
-            return this.endByte - this.startByte;
-        }
-        get index() {
-            return Math.round(this.startByte / this.file.blockSize);
-        }
-        get blob() {
-            return this.file.slice(this.startByte, this.endByte);
-        }
-    }
-    exports.default = Block;
-});
 define("core/utils", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    exports.sizeToStr = exports.createThrottle = exports.urlSafeBase64 = exports.arrayBufferToBase64 = exports.concatBuffer = exports.isObject = exports.isBlob = exports.guid = void 0;
     function guid() {
         return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
             const r = (Math.random() * 16) | 0;
@@ -131,6 +68,19 @@ define("core/utils", ["require", "exports"], function (require, exports) {
         };
     }
     exports.createThrottle = createThrottle;
+    function sizeToStr(size) {
+        if (size < 1024 * 1024) {
+            return (size / 1024).toFixed(2) + 'KB';
+        }
+        if (size < 1024 * 1024 * 1024) {
+            return (size / (1024 * 1024)).toFixed(2) + 'MB';
+        }
+        if (size < 1024 * 1024 * 1024 * 1024) {
+            return (size / (1024 * 1024 * 1024)).toFixed(2) + 'GB';
+        }
+        return '';
+    }
+    exports.sizeToStr = sizeToStr;
 });
 define("core/file", ["require", "exports", "core/block", "core/utils"], function (require, exports, block_1, utils_1) {
     "use strict";
@@ -188,13 +138,379 @@ define("core/file", ["require", "exports", "core/block", "core/utils"], function
         getBlockByIndex(index) {
             return this.getBlocks()[index];
         }
+        getChunksSize() {
+            return this.getBlocks().map(block => block.getChunks().length).reduce((a, b) => a + b, 0);
+        }
     }
     exports.default = QZFile;
 });
-define("qetag/base", ["require", "exports", "events"], function (require, exports, events_1) {
+define("core/block", ["require", "exports", "core/chunk"], function (require, exports, chunk_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class QETagBase extends events_1.EventEmitter {
+    chunk_1 = __importDefault(chunk_1);
+    class Block {
+        constructor(file, startByte, endByte) {
+            this.file = file;
+            this.startByte = startByte;
+            this.endByte = endByte;
+            this.chunks = [];
+        }
+        getChunks() {
+            if (this.chunks.length) {
+                return this.chunks;
+            }
+            let startByte = 0;
+            const chunks = [];
+            while (startByte < this.size) {
+                let endByte = startByte + this.file.chunkSize;
+                if (endByte > this.size) {
+                    endByte = this.size;
+                }
+                chunks.push(new chunk_1.default(this, startByte, endByte));
+                startByte += this.file.chunkSize;
+            }
+            this.chunks = chunks;
+            return chunks;
+        }
+        getChunkByIndex(index) {
+            return this.getChunks()[index];
+        }
+        get size() {
+            return this.endByte - this.startByte;
+        }
+        get index() {
+            return Math.round(this.startByte / this.file.blockSize);
+        }
+        get blob() {
+            return this.file.slice(this.startByte, this.endByte);
+        }
+    }
+    exports.default = Block;
+});
+define("core/chunk", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Chunk {
+        constructor(block, startByte, endByte) {
+            this.block = block;
+            this.startByte = startByte;
+            this.endByte = endByte;
+        }
+        get size() {
+            return this.endByte - this.startByte;
+        }
+        get index() {
+            return Math.floor(this.startByte / this.block.file.chunkSize);
+        }
+        get blob() {
+            const block = this.block;
+            const file = block.file;
+            const offset = block.index * file.blockSize;
+            return file.slice(offset + this.startByte, offset + this.endByte);
+        }
+    }
+    exports.default = Chunk;
+});
+define("constants/status", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.UPLOADING_STATUS = exports.TASK_STATUS_INFO = exports.STATUS = void 0;
+    var STATUS;
+    (function (STATUS) {
+        STATUS[STATUS["PENDING"] = 1] = "PENDING";
+        STATUS[STATUS["PREPARING"] = 2] = "PREPARING";
+        STATUS[STATUS["UPLOADING"] = 3] = "UPLOADING";
+        STATUS[STATUS["CALCULATING"] = 4] = "CALCULATING";
+        STATUS[STATUS["FAILED"] = 5] = "FAILED";
+        STATUS[STATUS["DONE"] = 6] = "DONE";
+        STATUS[STATUS["CANCEL"] = 7] = "CANCEL";
+        STATUS[STATUS["PAUSE"] = 8] = "PAUSE";
+    })(STATUS = exports.STATUS || (exports.STATUS = {}));
+    exports.TASK_STATUS_INFO = {
+        [STATUS.PENDING]: '排队中...',
+        [STATUS.PREPARING]: '准备中...',
+        [STATUS.UPLOADING]: '上传中...',
+        [STATUS.CALCULATING]: '计算中...',
+        [STATUS.FAILED]: '上传失败',
+        [STATUS.DONE]: '上传完成',
+        [STATUS.CANCEL]: '取消上传',
+        [STATUS.PAUSE]: '暂停上传'
+    };
+    exports.UPLOADING_STATUS = {
+        [STATUS.PREPARING]: 1,
+        [STATUS.UPLOADING]: 1,
+        [STATUS.CALCULATING]: 1
+    };
+});
+define("constants/uploader-config", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.UploaderConfig = void 0;
+    exports.UploaderConfig = {
+        clientConfig: {
+            baseURL: 'https://api.6pan.cn',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        },
+        apis: {
+            token: '/v3/file/uploadToken',
+            mkblk: '/mkblk/',
+            bput: '/bput/',
+            mkfile: '/mkfile/'
+        },
+        AuthorizationTokenKey: 'qingzhen-token',
+        AuthorizationStorageKey: 'user-authorization-token',
+        chunkRetry: 3,
+        blockSize: 4 * 1024 * 1024,
+        chunkSize: 1 * 1024 * 1024,
+        concurrency: 3,
+        taskConcurrencyInWorkers: 3,
+    };
+});
+define("third-parts/merge", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.isPlainObject = exports.clone = exports.recursive = exports.merge = exports.main = void 0;
+    exports.default = main;
+    function main(...items) {
+        return merge(...items);
+    }
+    exports.main = main;
+    main.clone = clone;
+    main.isPlainObject = isPlainObject;
+    main.recursive = recursive;
+    function merge(...items) {
+        return _merge(items[0] === true, false, items);
+    }
+    exports.merge = merge;
+    function recursive(...items) {
+        return _merge(items[0] === true, true, items);
+    }
+    exports.recursive = recursive;
+    function clone(input) {
+        if (Array.isArray(input)) {
+            const output = [];
+            for (let index = 0; index < input.length; ++index)
+                output.push(clone(input[index]));
+            return output;
+        }
+        else if (isPlainObject(input)) {
+            const output = {};
+            for (const index in input)
+                output[index] = clone(input[index]);
+            return output;
+        }
+        else {
+            return input;
+        }
+    }
+    exports.clone = clone;
+    function isPlainObject(input) {
+        return input && typeof input === 'object' && !Array.isArray(input);
+    }
+    exports.isPlainObject = isPlainObject;
+    function _recursiveMerge(base, extend) {
+        if (!isPlainObject(base))
+            return extend;
+        for (const key in extend)
+            base[key] = (isPlainObject(base[key]) && isPlainObject(extend[key])) ?
+                _recursiveMerge(base[key], extend[key]) :
+                extend[key];
+        return base;
+    }
+    function _merge(isClone, isRecursive, items) {
+        let result;
+        if (isClone || !isPlainObject(result = items.shift()))
+            result = {};
+        for (let index = 0; index < items.length; ++index) {
+            const item = items[index];
+            if (!isPlainObject(item))
+                continue;
+            for (const key in item) {
+                if (key === '__proto__')
+                    continue;
+                const value = isClone ? clone(item[key]) : item[key];
+                result[key] = isRecursive ? _recursiveMerge(result[key], value) : value;
+            }
+        }
+        return result;
+    }
+});
+define("core/base", ["require", "exports", "constants/uploader-config", "third-parts/merge"], function (require, exports, uploader_config_1, merge_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Base {
+        static config(config) {
+            Base.default = merge_1.merge(Base.default, config);
+        }
+    }
+    exports.default = Base;
+    Base.default = uploader_config_1.UploaderConfig;
+});
+define("core/status", ["require", "exports", "constants/status", "core/base", "constants/status"], function (require, exports, status_1, base_1, status_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.UPLOADING_STATUS = exports.TASK_STATUS_INFO = exports.STATUS = void 0;
+    base_1 = __importDefault(base_1);
+    Object.defineProperty(exports, "STATUS", { enumerable: true, get: function () { return status_2.STATUS; } });
+    Object.defineProperty(exports, "TASK_STATUS_INFO", { enumerable: true, get: function () { return status_2.TASK_STATUS_INFO; } });
+    Object.defineProperty(exports, "UPLOADING_STATUS", { enumerable: true, get: function () { return status_2.UPLOADING_STATUS; } });
+    class Status extends base_1.default {
+        constructor() {
+            super(...arguments);
+            this.status = status_1.STATUS.PENDING;
+            this._statusHandlers = {};
+            this.tryCount = 0;
+            this.error = [];
+        }
+        get statusInfo() {
+            return status_1.TASK_STATUS_INFO[this.status];
+        }
+        restTryCount() {
+            this.tryCount = 0;
+        }
+        getError() {
+            return this.error;
+        }
+        recordError(e) {
+            this.error.push(e);
+        }
+        markTry(tryNum) {
+            if (tryNum) {
+                this.tryCount = tryNum;
+            }
+            else {
+                this.tryCount++;
+            }
+        }
+        addStatusHandler(status, handler) {
+            this._statusHandlers[status] = handler;
+            return this;
+        }
+        setStatus(status) {
+            this.status = status;
+            const handler = this._statusHandlers[status];
+            if (handler) {
+                handler();
+            }
+        }
+        isUploading() {
+            return this.status in status_1.UPLOADING_STATUS;
+        }
+        isFailed() {
+            return this.status === status_1.STATUS.FAILED;
+        }
+        isTryout() {
+            return this.tryCount > base_1.default.default.chunkRetry;
+        }
+        isDone() {
+            return this.status === status_1.STATUS.DONE;
+        }
+        isPending() {
+            return this.status === status_1.STATUS.PENDING;
+        }
+        isCancel() {
+            return this.status === status_1.STATUS.CANCEL;
+        }
+        isCalculating() {
+            return this.status === status_1.STATUS.CALCULATING;
+        }
+        isPreparing() {
+            return this.status === status_1.STATUS.PREPARING;
+        }
+        isPaused() {
+            return this.status === status_1.STATUS.PAUSE;
+        }
+    }
+    exports.default = Status;
+});
+define("http/base", ["require", "exports", "events"], function (require, exports, events_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class HttpClient extends events_1.EventEmitter {
+        constructor() {
+            super();
+        }
+    }
+    exports.default = HttpClient;
+    HttpClient.Events = {
+        UpdateProgress: 'UpdateProgress'
+    };
+});
+define("http/xhr", ["require", "exports", "core/utils", "http/base"], function (require, exports, utils_2, base_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    base_2 = __importDefault(base_2);
+    class Http extends base_2.default {
+        constructor(_) {
+            super();
+            this.channel = utils_2.guid();
+        }
+        post(props, { isEmitEvent } = {}) {
+            return fetch(props.url, {
+                body: props.data,
+                method: 'POST',
+                mode: 'cors',
+                credentials: props.credentials,
+                headers: Object.assign({}, (props.config
+                    ? props.config.headers
+                        ? props.config.headers
+                        : {}
+                    : {}))
+            }).then(response => {
+                return response.json();
+            }).then(json => {
+                isEmitEvent && this.emit(Http.Events.UpdateProgress, props.data.size);
+                this.removeAllListeners(this.channel);
+                return json;
+            });
+        }
+    }
+    exports.default = Http;
+});
+define("http/worker", ["require", "exports", "core/utils", "http/base"], function (require, exports, utils_3, base_3) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    base_3 = __importDefault(base_3);
+    class HttpWorker extends base_3.default {
+        constructor(opts) {
+            super();
+            this.workers = opts.workers;
+            this.channel = utils_3.guid();
+        }
+        post(props, { isTransferSupported, isEmitEvent } = {}) {
+            return new Promise((resolve, reject) => {
+                const channel = utils_3.guid();
+                this.workers.on(channel, (payload) => {
+                    if (payload.type === 'error') {
+                        this.workers.removeAllListeners(channel);
+                        reject(payload.data);
+                    }
+                    if (payload.type === 'progress') {
+                        isEmitEvent && this.emit('UpdateProgress', payload.data);
+                    }
+                    else {
+                        this.workers.removeAllListeners(channel);
+                        resolve(payload.data);
+                    }
+                });
+                const opts = isTransferSupported ? {
+                    transfer: [props.data]
+                } : undefined;
+                this.workers.send({
+                    channel: channel,
+                    payload: props,
+                }, opts);
+            });
+        }
+    }
+    exports.default = HttpWorker;
+});
+define("qetag/base", ["require", "exports", "events"], function (require, exports, events_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class QETagBase extends events_2.EventEmitter {
         constructor(file) {
             super();
             this.file = file;
@@ -219,36 +535,39 @@ define("qetag/base", ["require", "exports", "events"], function (require, export
 define("third-parts/throat", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    function Delayed(resolve, fn, self, args) {
-        this.resolve = resolve;
-        this.fn = fn;
-        this.self = self || null;
-        this.args = args;
-    }
-    function Queue() {
-        this._s1 = [];
-        this._s2 = [];
-    }
-    Queue.prototype.push = function (value) {
-        this._s1.push(value);
-    };
-    Queue.prototype.shift = function () {
-        let s2 = this._s2;
-        if (s2.length === 0) {
-            const s1 = this._s1;
-            if (s1.length === 0) {
-                return;
-            }
-            this._s1 = s2;
-            s2 = this._s2 = s1.reverse();
+    class Delayed {
+        constructor(resolve, fn, self, args) {
+            this.resolve = resolve;
+            this.fn = fn;
+            this.self = self || null;
+            this.args = args;
         }
-        return s2.pop();
-    };
-    Queue.prototype.isEmpty = function () {
-        return !this._s1.length && !this._s2.length;
-    };
-    function throat(PromiseArgument) {
-        let Promise;
+    }
+    class Queue {
+        constructor() {
+            this._s1 = [];
+            this._s2 = [];
+        }
+        push(value) {
+            this._s1.push(value);
+        }
+        shift() {
+            let s2 = this._s2;
+            if (s2.length === 0) {
+                const s1 = this._s1;
+                if (s1.length === 0) {
+                    return;
+                }
+                this._s1 = s2;
+                s2 = this._s2 = s1.reverse();
+            }
+            return s2.pop();
+        }
+        isEmpty() {
+            return !this._s1.length && !this._s2.length;
+        }
+    }
+    function throat() {
         function throat(size, fn) {
             const queue = new Queue();
             function run(fn, self, args) {
@@ -306,26 +625,16 @@ define("third-parts/throat", ["require", "exports"], function (require, exports)
                 };
             }
         }
-        if (arguments.length === 1 && typeof PromiseArgument === 'function') {
-            Promise = PromiseArgument;
-            return throat;
-        }
-        else {
-            if (typeof Promise !== 'function') {
-                throw new Error('You must provide a Promise polyfill for this library to work in older environments');
-            }
-            return throat(arguments[0], arguments[1]);
-        }
+        return throat;
     }
     exports.default = throat;
-    ;
 });
-define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base", "core/utils"], function (require, exports, throat_1, base_1, utils_2) {
+define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base", "core/utils"], function (require, exports, throat_1, base_4, utils_4) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     throat_1 = __importDefault(throat_1);
-    base_1 = __importDefault(base_1);
-    class QETagNormal extends base_1.default {
+    base_4 = __importDefault(base_4);
+    class QETagNormal extends base_4.default {
         constructor(file, _) {
             super(file);
             this.concurrency = window.navigator.hardwareConcurrency || 1;
@@ -366,7 +675,7 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
             return Promise.race([
                 racePromise,
                 Promise.all(blocks
-                    .map(throat_1.default(Promise).apply(this, [this.concurrency, (block) => {
+                    .map(throat_1.default().apply(this, [this.concurrency, (block) => {
                         return Promise.race([
                             racePromise.then(() => {
                                 throw new Error('Racing interrupted');
@@ -388,15 +697,15 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
                     }
                     else {
                         perfex = 0x80 | perfex;
-                        hash = hashs.reduce((a, b) => utils_2.concatBuffer(a, b));
+                        hash = hashs.reduce((a, b) => utils_4.concatBuffer(a, b));
                         hash = yield window.crypto.subtle.digest('SHA-1', hash);
                     }
                     const byte = new ArrayBuffer(1);
                     const dv = new DataView(byte);
                     dv.setUint8(0, perfex);
-                    hash = utils_2.concatBuffer(byte, hash);
-                    hash = utils_2.arrayBufferToBase64(hash);
-                    const calcedhash = utils_2.urlSafeBase64(hash) + this.file.size.toString(36);
+                    hash = utils_4.concatBuffer(byte, hash);
+                    hash = utils_4.arrayBufferToBase64(hash);
+                    const calcedhash = utils_4.urlSafeBase64(hash) + this.file.size.toString(36);
                     return calcedhash;
                 }))
             ])
@@ -408,15 +717,15 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
     }
     exports.default = QETagNormal;
 });
-define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], function (require, exports, base_2, utils_3) {
+define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], function (require, exports, base_5, utils_5) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    base_2 = __importDefault(base_2);
-    class QETagWorker extends base_2.default {
+    base_5 = __importDefault(base_5);
+    class QETagWorker extends base_5.default {
         constructor(file, opts) {
             super(file);
             this.workers = opts.workers;
-            this.channel = utils_3.guid();
+            this.channel = utils_5.guid();
         }
         get({ isTransferSupported, isEmitEvent } = {}, racePromise = new Promise((res) => {
         })) {
@@ -454,15 +763,15 @@ define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], funct
                             }
                             else {
                                 perfex = 0x80 | perfex;
-                                result = hashs.reduce((a, b) => utils_3.concatBuffer(a, b));
+                                result = hashs.reduce((a, b) => utils_5.concatBuffer(a, b));
                                 result = yield window.crypto.subtle.digest('SHA-1', result);
                             }
                             const byte = new ArrayBuffer(1);
                             const dv = new DataView(byte);
                             dv.setUint8(0, perfex);
-                            result = utils_3.concatBuffer(byte, result);
-                            result = utils_3.arrayBufferToBase64(result);
-                            const calcedhash = utils_3.urlSafeBase64(result) + this.file.size.toString(36);
+                            result = utils_5.concatBuffer(byte, result);
+                            result = utils_5.arrayBufferToBase64(result);
+                            const calcedhash = utils_5.urlSafeBase64(result) + this.file.size.toString(36);
                             this.workers.removeAllListeners(this.channel);
                             resolve(calcedhash);
                         }
@@ -492,110 +801,16 @@ define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], funct
     }
     exports.default = QETagWorker;
 });
-define("qetag/index", ["require", "exports", "qetag/base", "qetag/normal", "qetag/worker"], function (require, exports, base_3, normal_1, worker_1) {
+define("qetag/index", ["require", "exports", "qetag/base", "qetag/normal", "qetag/worker"], function (require, exports, base_6, normal_1, worker_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    base_3 = __importDefault(base_3);
+    base_6 = __importDefault(base_6);
     normal_1 = __importDefault(normal_1);
     worker_1 = __importDefault(worker_1);
     exports.default = {
-        Base: base_3.default,
+        Base: base_6.default,
         Normal: normal_1.default,
         Worker: worker_1.default
-    };
-});
-define("http/base", ["require", "exports", "events"], function (require, exports, events_2) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class HttpClient extends events_2.EventEmitter {
-        constructor() {
-            super();
-        }
-    }
-    exports.default = HttpClient;
-    HttpClient.Events = {
-        UpdateProgress: 'UpdateProgress'
-    };
-});
-define("http/xhr", ["require", "exports", "core/utils", "http/base"], function (require, exports, utils_4, base_4) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    base_4 = __importDefault(base_4);
-    class Http extends base_4.default {
-        constructor(_) {
-            super();
-            this.channel = utils_4.guid();
-        }
-        post(props, { isEmitEvent } = {}) {
-            return fetch(props.url, {
-                body: props.data,
-                method: 'POST',
-                mode: 'cors',
-                credentials: props.credentials,
-                headers: Object.assign({}, (props.config
-                    ? props.config.headers
-                        ? props.config.headers
-                        : {}
-                    : {}))
-            }).then(response => {
-                return response.json();
-            }).then(json => {
-                isEmitEvent && this.emit(Http.Events.UpdateProgress, props.data.size);
-                this.removeAllListeners(this.channel);
-                return json;
-            });
-        }
-    }
-    exports.default = Http;
-});
-define("http/worker", ["require", "exports", "core/utils", "http/base"], function (require, exports, utils_5, base_5) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    base_5 = __importDefault(base_5);
-    class HttpWorker extends base_5.default {
-        constructor(opts) {
-            super();
-            this.workers = opts.workers;
-            this.channel = utils_5.guid();
-        }
-        post(props, { isTransferSupported, isEmitEvent } = {}) {
-            return new Promise((resolve, reject) => {
-                const channel = utils_5.guid();
-                this.workers.on(channel, (payload) => {
-                    if (payload.type === 'error') {
-                        this.workers.removeAllListeners(channel);
-                        reject(payload.data);
-                    }
-                    if (payload.type === 'progress') {
-                        isEmitEvent && this.emit('UpdateProgress', payload.data);
-                    }
-                    else {
-                        this.workers.removeAllListeners(channel);
-                        resolve(payload.data);
-                    }
-                });
-                const opts = isTransferSupported ? {
-                    transfer: [props.data]
-                } : undefined;
-                this.workers.send({
-                    channel: channel,
-                    payload: props,
-                }, opts);
-            });
-        }
-    }
-    exports.default = HttpWorker;
-});
-define("http/index", ["require", "exports", "http/xhr", "http/worker", "http/base"], function (require, exports, xhr_1, worker_2, base_6) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    xhr_1 = __importDefault(xhr_1);
-    worker_2 = __importDefault(worker_2);
-    base_6 = __importDefault(base_6);
-    exports.default = {
-        Normal: xhr_1.default,
-        Worker: worker_2.default,
-        Base: base_6.default
     };
 });
 define("worker/index", ["require", "exports", "events"], function (require, exports, events_3) {
@@ -643,30 +858,29 @@ define("worker/index", ["require", "exports", "events"], function (require, expo
             const blob = new Blob([`
             $$=${fn.toString()};
             onmessage=function (e) {
-                $$(e.data).then(
-                        function (res) {
-                            var payload = {
-                                data: res,
-                                type: 'data'
-                            };
-                            postMessage({
-                                channel: e.data.channel,
-                                payload: payload
-                            });
-                        },
-                        function (res) {
-                            postMessage({
-                                channel: e.data.channel,
-                                payload: {
-                                    type: 'error',
-                                    data: {
-                                        message: res.message,
-                                        stack: res.stack
-                                    }
+                $$(e.data)
+                    .then(function (res) {
+                        var payload = {
+                            data: res,
+                            type: 'data'
+                        };
+                        postMessage({
+                            channel: e.data.channel,
+                            payload: payload
+                        });
+                    })
+                    .catch(function (res) {
+                        postMessage({
+                            channel: e.data.channel,
+                            payload: {
+                                type: 'error',
+                                data: {
+                                    message: res.message,
+                                    stack: res.stack
                                 }
-                            });
-                        }
-                    )
+                            }
+                        });
+                    })
             };
         `], {
                 type: "text/javascript",
@@ -754,15 +968,21 @@ define("qetag/worker-script", ["require", "exports"], function (require, exports
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function handler(data) {
-        const payload = data.payload;
-        if (typeof FileReader === "undefined") {
-            return Promise.reject(new Error('FileReaderAPI not support'));
-        }
         return new Promise(function (resolve, reject) {
+            const payload = data.payload;
+            if (typeof FileReader === "undefined") {
+                reject(new Error('FileReaderAPI not support in WebWorkers'));
+            }
             const fr = new FileReader();
             fr.onload = function () {
                 if (fr.result) {
-                    self.crypto.subtle.digest('SHA-1', fr.result)
+                    if (typeof crypto === 'undefined') {
+                        reject(new Error('Crypto Api not support in WebWorkers'));
+                    }
+                    if (typeof crypto.subtle === 'undefined') {
+                        reject(new Error('Crypto.Subtle Api not support in WebWorkers'));
+                    }
+                    crypto.subtle.digest('SHA-1', fr.result)
                         .then(sha1 => {
                         resolve({
                             sha1: sha1,
@@ -811,142 +1031,95 @@ define("http/worker-script", ["require", "exports"], function (require, exports)
     }
     exports.default = handler;
 });
-define("third-parts/merge", ["require", "exports"], function (require, exports) {
+define("http/index", ["require", "exports", "http/xhr", "http/worker", "http/base"], function (require, exports, xhr_1, worker_2, base_7) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.default = main;
-    function main(...items) {
-        return merge(...items);
-    }
-    exports.main = main;
-    main.clone = clone;
-    main.isPlainObject = isPlainObject;
-    main.recursive = recursive;
-    function merge(...items) {
-        return _merge(items[0] === true, false, items);
-    }
-    exports.merge = merge;
-    function recursive(...items) {
-        return _merge(items[0] === true, true, items);
-    }
-    exports.recursive = recursive;
-    function clone(input) {
-        if (Array.isArray(input)) {
-            const output = [];
-            for (let index = 0; index < input.length; ++index)
-                output.push(clone(input[index]));
-            return output;
-        }
-        else if (isPlainObject(input)) {
-            const output = {};
-            for (const index in input)
-                output[index] = clone(input[index]);
-            return output;
-        }
-        else {
-            return input;
-        }
-    }
-    exports.clone = clone;
-    function isPlainObject(input) {
-        return input && typeof input === 'object' && !Array.isArray(input);
-    }
-    exports.isPlainObject = isPlainObject;
-    function _recursiveMerge(base, extend) {
-        if (!isPlainObject(base))
-            return extend;
-        for (const key in extend)
-            base[key] = (isPlainObject(base[key]) && isPlainObject(extend[key])) ?
-                _recursiveMerge(base[key], extend[key]) :
-                extend[key];
-        return base;
-    }
-    function _merge(isClone, isRecursive, items) {
-        let result;
-        if (isClone || !isPlainObject(result = items.shift()))
-            result = {};
-        for (let index = 0; index < items.length; ++index) {
-            const item = items[index];
-            if (!isPlainObject(item))
-                continue;
-            for (const key in item) {
-                if (key === '__proto__')
-                    continue;
-                const value = isClone ? clone(item[key]) : item[key];
-                result[key] = isRecursive ? _recursiveMerge(result[key], value) : value;
-            }
-        }
-        return result;
-    }
+    xhr_1 = __importDefault(xhr_1);
+    worker_2 = __importDefault(worker_2);
+    base_7 = __importDefault(base_7);
+    exports.default = {
+        Normal: xhr_1.default,
+        Worker: worker_2.default,
+        Base: base_7.default
+    };
 });
-define("index", ["require", "exports", "core/file", "qetag/index", "http/index", "worker/index", "qetag/worker-script", "http/worker-script", "third-parts/merge", "core/utils"], function (require, exports, file_1, index_1, index_2, index_3, worker_script_1, worker_script_2, merge_1, utils_6) {
+define("core/ctx", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    file_1 = __importDefault(file_1);
-    index_1 = __importDefault(index_1);
-    index_2 = __importDefault(index_2);
-    index_3 = __importDefault(index_3);
-    worker_script_1 = __importDefault(worker_script_1);
-    worker_script_2 = __importDefault(worker_script_2);
-    merge_1 = __importDefault(merge_1);
-    var STATUS;
-    (function (STATUS) {
-        STATUS[STATUS["PENDING"] = 1] = "PENDING";
-        STATUS[STATUS["PREPARING"] = 2] = "PREPARING";
-        STATUS[STATUS["UPLOADING"] = 3] = "UPLOADING";
-        STATUS[STATUS["CALCULATING"] = 4] = "CALCULATING";
-        STATUS[STATUS["FAILED"] = 5] = "FAILED";
-        STATUS[STATUS["DONE"] = 6] = "DONE";
-        STATUS[STATUS["CANCEL"] = 7] = "CANCEL";
-        STATUS[STATUS["PAUSE"] = 8] = "PAUSE";
-    })(STATUS = exports.STATUS || (exports.STATUS = {}));
-    exports.TASK_STATUS_INFO = {
-        [STATUS.PENDING]: '排队中...',
-        [STATUS.PREPARING]: '准备中...',
-        [STATUS.UPLOADING]: '上传中...',
-        [STATUS.CALCULATING]: '计算中...',
-        [STATUS.FAILED]: '上传失败',
-        [STATUS.DONE]: '上传完成',
-        [STATUS.CANCEL]: '取消上传',
-        [STATUS.PAUSE]: '暂停上传'
-    };
-    exports.UPLOADING_STATUS = {
-        [STATUS.PREPARING]: 1,
-        [STATUS.UPLOADING]: 1,
-        [STATUS.CALCULATING]: 1
-    };
-    function sizeToStr(size) {
-        if (size < 1024 * 1024) {
-            return (size / 1024).toFixed(2) + 'KB';
-        }
-        if (size < 1024 * 1024 * 1024) {
-            return (size / (1024 * 1024)).toFixed(2) + 'MB';
-        }
-        if (size < 1024 * 1024 * 1024 * 1024) {
-            return (size / (1024 * 1024 * 1024)).toFixed(2) + 'GB';
-        }
-        return '';
-    }
-    let qetagWorkers;
-    let uploaderWorkers;
-    ;
-    class WebFile {
-        constructor(file, fileProps = {}, config = {}) {
-            this.tryCount = 0;
-            this.progress = 0;
+    class Ctx {
+        constructor() {
             this.ctx = {
                 length: 0
             };
+        }
+        get size() {
+            return Object.keys(this.ctx)
+                .map(index => {
+                const ctx = this.ctx[index];
+                if (ctx && ctx.length) {
+                    return ctx.length;
+                }
+                return 0;
+            }).reduce((a, b) => a + b, 0);
+        }
+        get length() {
+            return this.ctx.length;
+        }
+        remove(index) {
+            if (this.ctx[index]) {
+                delete this.ctx[index];
+                this.ctx.length -= 1;
+            }
+        }
+        add(ctx, chunk) {
+            if (chunk.index === 0) {
+                this.ctx[chunk.block.index] = [];
+                this.ctx.length += 1;
+            }
+            this.ctx[chunk.block.index][chunk.index] = ctx;
+        }
+        toArray() {
+            return Array.from(this.ctx);
+        }
+        clearArray() {
+            return this.toArray().filter(i => i);
+        }
+        selfEqual() {
+            return this.clearArray().length === this.ctx.length;
+        }
+        toCtxString() {
+            return this.clearArray().map(ctx => ctx[ctx.length - 1]).toString();
+        }
+        stringify() {
+            return JSON.stringify(this.ctx);
+        }
+    }
+    exports.default = Ctx;
+});
+define("service", ["require", "exports", "core/status", "qetag/index", "worker/index", "qetag/worker-script", "http/worker-script", "core/file", "http/index", "core/utils", "constants/status", "core/ctx", "third-parts/merge"], function (require, exports, status_3, index_1, index_2, worker_script_1, worker_script_2, file_1, index_3, utils_6, status_4, ctx_1, merge_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    status_3 = __importDefault(status_3);
+    index_1 = __importDefault(index_1);
+    index_2 = __importDefault(index_2);
+    worker_script_1 = __importDefault(worker_script_1);
+    worker_script_2 = __importDefault(worker_script_2);
+    file_1 = __importDefault(file_1);
+    index_3 = __importDefault(index_3);
+    ctx_1 = __importDefault(ctx_1);
+    let qetagWorkers;
+    let uploaderWorkers;
+    class Service extends status_3.default {
+        constructor(file, fileProps = {}, config = {}) {
+            super();
+            this.progress = 0;
+            this.hashCalcProgress = 0;
             this.lastProgress = {
                 time: null,
                 size: 0
             };
-            this.bytesPreSecond = 0;
             this.rate = '0KB/S';
-            this.parent = '';
-            this.error = [];
-            this.hashCalcProgress = 0;
-            this.status = STATUS.PENDING;
+            this.bytesPreSecond = 0;
             this.tokenInfo = {
                 uploadToken: "",
                 createInfo: {},
@@ -956,7 +1129,11 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                 partUploadUrl: "https://upload-v1.6pan.cn",
                 directUploadUrl: "https://upload-v1.6pan.cn/file/upload"
             };
-            this.pos = [];
+            this.file = new file_1.default({
+                file,
+                blockSize: Service.default.blockSize,
+                chunkSize: Service.default.chunkSize
+            });
             this.props = fileProps;
             if (config.adapter) {
                 if (!(config.adapter in index_1.default)) {
@@ -967,20 +1144,34 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                 adapter: 'Normal',
                 onStatusChange: function () { }
             }, config);
-            this.file = new file_1.default({
-                file,
-                blockSize: WebFile.default.blockSize,
-                chunkSize: WebFile.default.chunkSize
-            });
-            this.sizeStr = sizeToStr(this.file.size);
+            this.sizeStr = utils_6.sizeToStr(this.file.size);
+            this.ctx = new ctx_1.default();
+            this._setStatusHandler();
         }
-        static config(config) {
-            WebFile.default = merge_1.default(WebFile.default, config);
+        isExisted() {
+            if (this.normalFile) {
+                return true;
+            }
+            return false;
+        }
+        setFileInfo(info) {
+            if (info.created) {
+                this.setNormalFile(info.createInfo);
+            }
+            else {
+                this.tokenInfo = info;
+            }
+        }
+        isUploadInfoExist() {
+            return Boolean(this.normalFile) || Boolean(this.tokenInfo.uploadToken);
+        }
+        setNormalFile(file) {
+            this.normalFile = file;
         }
         _qetag() {
             if (!this.qetag) {
                 if (!qetagWorkers && this.config.adapter === 'Worker') {
-                    qetagWorkers = new index_3.default(index_3.default.asyncFnMover(worker_script_1.default), WebFile.default.taskConcurrencyInWorkers);
+                    qetagWorkers = new index_2.default(index_2.default.asyncFnMover(worker_script_1.default), Service.default.taskConcurrencyInWorkers);
                 }
                 this.qetag = new index_1.default[this.config.adapter](this.file, {
                     workers: qetagWorkers
@@ -992,13 +1183,129 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
             }
             return this.qetag;
         }
+        _http() {
+            if (!this.http) {
+                if (!uploaderWorkers && this.config.adapter === 'Worker') {
+                    uploaderWorkers = new index_2.default(index_2.default.asyncFnMover(worker_script_2.default), Service.default.taskConcurrencyInWorkers);
+                }
+                this.http = new index_3.default[this.config.adapter]({
+                    workers: uploaderWorkers
+                });
+                const throttle = utils_6.createThrottle(1000);
+                this.http.on(index_3.default.Base.Events.UpdateProgress, () => {
+                    throttle(() => {
+                        this.setProgress();
+                    });
+                });
+            }
+            return this.http;
+        }
+        setProgress() {
+            const now = new Date().getTime();
+            const { chunkSize } = Service.default;
+            const bytesUploaded = this.ctx.size * chunkSize;
+            if (this.lastProgress.time) {
+                this.bytesPreSecond = Math.floor((bytesUploaded - this.lastProgress.size) / ((now - this.lastProgress.time) / 1000));
+                this.rate = utils_6.sizeToStr(this.bytesPreSecond) + '/S';
+            }
+            this.lastProgress = {
+                time: now,
+                size: bytesUploaded
+            };
+            let progress = parseFloat((bytesUploaded * 100 / this.file.size).toFixed(2));
+            if (progress > 100) {
+                progress = 100;
+            }
+            this.progress = progress;
+            if (this.bytesPreSecond >= 0 &&
+                this.isUploading()) {
+                this.setStatus(status_4.STATUS.UPLOADING);
+            }
+        }
+        _setStatusHandler() {
+            const onChange = () => {
+                this.config.onStatusChange(this, this.status);
+            };
+            this.addStatusHandler(status_4.STATUS.CALCULATING, onChange)
+                .addStatusHandler(status_4.STATUS.CANCEL, () => {
+                var _a, _b, _c;
+                (_a = this.http) === null || _a === void 0 ? void 0 : _a.removeAllListeners();
+                (_b = this.qetag) === null || _b === void 0 ? void 0 : _b.emit('race-to-stop');
+                (_c = this.qetag) === null || _c === void 0 ? void 0 : _c.removeAllListeners();
+                onChange();
+            })
+                .addStatusHandler(status_4.STATUS.DONE, () => {
+                var _a;
+                this.progress = 100;
+                (_a = this.qetag) === null || _a === void 0 ? void 0 : _a.removeAllListeners();
+                onChange();
+            })
+                .addStatusHandler(status_4.STATUS.FAILED, onChange)
+                .addStatusHandler(status_4.STATUS.PAUSE, () => {
+                var _a;
+                this.tryCount = 0;
+                (_a = this.qetag) === null || _a === void 0 ? void 0 : _a.emit('race-to-stop');
+                onChange();
+            })
+                .addStatusHandler(status_4.STATUS.PENDING, () => {
+                this.tryCount = 0;
+                onChange();
+            })
+                .addStatusHandler(status_4.STATUS.PREPARING, onChange)
+                .addStatusHandler(status_4.STATUS.UPLOADING, onChange);
+        }
+        chunkUpload(chunk, ctx) {
+            const http = this._http();
+            const { clientConfig, apis } = Service.default;
+            const config = {
+                url: '',
+                data: chunk.blob,
+                credentials: 'omit',
+                config: merge_2.merge({}, clientConfig, {
+                    baseURL: this.tokenInfo.partUploadUrl,
+                    headers: {
+                        'Authorization': this.tokenInfo.uploadToken,
+                        'UploadBatch': this.file.batch,
+                        'Content-Type': 'application/octet-stream'
+                    }
+                })
+            };
+            if (chunk.index === 0) {
+                config.url = `${apis.mkblk}${chunk.block.size}/${chunk.block.index}`;
+            }
+            else {
+                config.url = `${apis.bput}${ctx}/${chunk.startByte}`;
+            }
+            config.url = this.tokenInfo.partUploadUrl + config.url;
+            return http.post(config, {
+                isTransferablesSupported: index_2.default.isTransferablesSupported(),
+                isEmitEvent: true
+            });
+        }
+        createFile() {
+            const http = this._http();
+            const { clientConfig, apis } = Service.default;
+            return http.post({
+                url: this.tokenInfo.partUploadUrl + apis.mkfile + this.file.size,
+                data: this.ctx.toCtxString(),
+                credentials: 'omit',
+                config: merge_2.merge({}, clientConfig, {
+                    baseURL: this.tokenInfo.partUploadUrl,
+                    headers: {
+                        'Authorization': this.tokenInfo.uploadToken,
+                        'UploadBatch': this.file.batch,
+                        'Content-Type': 'text/plain;charset=UTF-8'
+                    }
+                })
+            });
+        }
         getHash(raceFunction) {
             const qetag = this._qetag();
             if (qetag.isExist()) {
                 return Promise.resolve(qetag.getSync());
             }
             return qetag.get({
-                isTransferablesSupported: index_3.default.isTransferablesSupported(),
+                isTransferablesSupported: index_2.default.isTransferablesSupported(),
                 isEmitEvent: true
             }, raceFunction);
         }
@@ -1010,34 +1317,8 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
             const qetag = this._qetag();
             qetag.set(hash);
         }
-        get statusInfo() {
-            return exports.TASK_STATUS_INFO[this.status];
-        }
-        isExisted() {
-            if (this.normalFile) {
-                return true;
-            }
-            return false;
-        }
-        _http() {
-            if (!this.http) {
-                if (!uploaderWorkers && this.config.adapter === 'Worker') {
-                    uploaderWorkers = new index_3.default(index_3.default.asyncFnMover(worker_script_2.default), WebFile.default.taskConcurrencyInWorkers);
-                }
-                this.http = new index_2.default[this.config.adapter]({
-                    workers: uploaderWorkers
-                });
-                const throttle = utils_6.createThrottle(1000);
-                this.http.on(index_2.default.Base.Events.UpdateProgress, (bytes) => {
-                    throttle(() => {
-                        this.setProgress(bytes);
-                    });
-                });
-            }
-            return this.http;
-        }
         _getDefaultRequestHeader() {
-            const { AuthorizationTokenKey, AuthorizationStorageKey } = WebFile.default;
+            const { AuthorizationTokenKey, AuthorizationStorageKey } = Service.default;
             const token = localStorage.getItem(AuthorizationStorageKey);
             if (token) {
                 return {
@@ -1063,10 +1344,10 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                     params.parent = this.props.parent;
                 }
                 const result = yield http.post({
-                    url: WebFile.default.clientConfig.baseURL + WebFile.default.apis.token,
+                    url: Service.default.clientConfig.baseURL + Service.default.apis.token,
                     data: JSON.stringify(params),
                     credentials: 'include',
-                    config: merge_1.default({}, WebFile.default.clientConfig, this._getDefaultRequestHeader())
+                    config: merge_2.merge({}, Service.default.clientConfig, this._getDefaultRequestHeader())
                 }).then(json => {
                     if (json.success === false) {
                         throw new Error(json.message);
@@ -1076,119 +1357,25 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                 return result;
             });
         }
-        markTry(tryNum) {
-            if (tryNum) {
-                this.tryCount = tryNum;
-            }
-            else {
-                this.tryCount++;
-            }
-        }
-        setStatus(status) {
-            this.status = status;
-            const qetag = this._qetag();
-            switch (status) {
-                case STATUS.CALCULATING:
-                    break;
-                case STATUS.CANCEL:
-                    if (this.http) {
-                        this.http.removeAllListeners();
-                    }
-                    if (this.qetag) {
-                        this.qetag.removeAllListeners();
-                    }
-                    qetag.emit('race-to-stop');
-                    break;
-                case STATUS.DONE:
-                    this.progress = 100;
-                    if (this.http) {
-                        this.http.removeAllListeners();
-                    }
-                    if (this.qetag) {
-                        this.qetag.removeAllListeners();
-                    }
-                    break;
-                case STATUS.FAILED:
-                    break;
-                case STATUS.PAUSE:
-                    this.tryCount = 0;
-                    qetag.emit('race-to-stop');
-                    break;
-                case STATUS.PENDING:
-                    this.tryCount = 0;
-                    break;
-                case STATUS.PREPARING:
-                    break;
-                case STATUS.UPLOADING:
-                    break;
-                default:
-                    break;
-            }
-            this.config.onStatusChange(this, this.status);
-        }
-        getError() {
-            return this.error;
-        }
-        setProgress(byte) {
-            const now = new Date().getTime();
-            const { chunkSize } = WebFile.default;
-            const bytesUploading = Object.keys(this.ctx)
-                .map(index => {
-                const ctx = this.ctx[index];
-                if (ctx && ctx.length) {
-                    return ctx.length;
-                }
-                return 0;
-            }).reduce((a, b) => a + b, 0);
-            const bytesUploaded = bytesUploading * chunkSize;
-            if (this.lastProgress.time) {
-                this.bytesPreSecond = Math.floor((bytesUploaded - this.lastProgress.size) / ((now - this.lastProgress.time) / 1000));
-                this.rate = sizeToStr(this.bytesPreSecond) + '/S';
-            }
-            this.lastProgress = {
-                time: now,
-                size: bytesUploaded
-            };
-            let progress = parseFloat((bytesUploaded * 100 / this.file.size).toFixed(2));
-            if (progress > 100) {
-                progress = 100;
-            }
-            this.progress = progress;
-            if (this.bytesPreSecond >= 0 &&
-                this.isUploading()) {
-                this.setStatus(STATUS.UPLOADING);
-            }
-        }
-        isUploading() {
-            return this.status in exports.UPLOADING_STATUS;
-        }
-        isFailed() {
-            return this.status === STATUS.FAILED;
-        }
-        isDone() {
-            return this.status === STATUS.DONE;
-        }
-        isPending() {
-            return this.status === STATUS.PENDING;
-        }
-        isTryout() {
-            return this.tryCount > WebFile.default.chunkRetry;
-        }
-        isCancel() {
-            return this.status === STATUS.CANCEL;
-        }
-        isCalculating() {
-            return this.status === STATUS.CALCULATING;
-        }
-        isPreparing() {
-            return this.status === STATUS.PREPARING;
-        }
-        isPaused() {
-            return this.status === STATUS.PAUSE;
+    }
+    exports.default = Service;
+});
+define("index", ["require", "exports", "constants/status", "service", "constants/status"], function (require, exports, status_5, service_1, status_6) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.WebFile = exports.UPLOADING_STATUS = exports.TASK_STATUS_INFO = exports.STATUS = void 0;
+    service_1 = __importDefault(service_1);
+    Object.defineProperty(exports, "STATUS", { enumerable: true, get: function () { return status_6.STATUS; } });
+    Object.defineProperty(exports, "TASK_STATUS_INFO", { enumerable: true, get: function () { return status_6.TASK_STATUS_INFO; } });
+    Object.defineProperty(exports, "UPLOADING_STATUS", { enumerable: true, get: function () { return status_6.UPLOADING_STATUS; } });
+    class WebFile extends service_1.default {
+        constructor(file, fileProps = {}, config = {}) {
+            super(file, fileProps, config);
+            this.pos = [];
         }
         pause() {
             if (this.isUploading()) {
-                this.setStatus(STATUS.PAUSE);
+                this.setStatus(status_5.STATUS.PAUSE);
                 return Promise.resolve();
             }
             return Promise.reject(new Error(`Warning: Non-uploading`));
@@ -1206,20 +1393,9 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
             }
             return Promise.reject(new Error(`Warning: Uploading`));
         }
-        restTryCount() {
-            this.tryCount = 0;
-        }
         cancel() {
-            this.setStatus(STATUS.CANCEL);
+            this.setStatus(status_5.STATUS.CANCEL);
             return Promise.resolve();
-        }
-        setFileInfo(info) {
-            if (info.created) {
-                this.setNormalFile(info.createInfo);
-            }
-            else {
-                this.tokenInfo = info;
-            }
         }
         upload() {
             return __awaiter(this, void 0, void 0, function* () {
@@ -1227,7 +1403,7 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                     throw new Error(`Warning: Uploading`);
                 }
                 try {
-                    this.setStatus(STATUS.CALCULATING);
+                    this.setStatus(status_5.STATUS.CALCULATING);
                     const qetag = this._qetag();
                     qetag.removeAllListeners('race-to-stop');
                     let resolveRefs;
@@ -1241,27 +1417,26 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                         qetag.set('');
                         return;
                     }
-                    this.setStatus(STATUS.PREPARING);
-                    const result = yield this.getTokenInfo();
-                    this.setFileInfo(result);
+                    this.setStatus(status_5.STATUS.PREPARING);
+                    if (!this.isUploadInfoExist()) {
+                        const result = yield this.getTokenInfo();
+                        this.setFileInfo(result);
+                    }
                     if (this.isExisted()) {
-                        this.setStatus(STATUS.DONE);
+                        this.setStatus(status_5.STATUS.DONE);
                         return;
                     }
                     if (this.isCancel()) {
                         throw new Error(`Warning: Cancel upload`);
                     }
-                    this.setStatus(STATUS.UPLOADING);
+                    this.setStatus(status_5.STATUS.UPLOADING);
                     this.start();
                 }
                 catch (e) {
                     this.recordError(e);
-                    this.setStatus(STATUS.FAILED);
+                    this.setStatus(status_5.STATUS.FAILED);
                 }
             });
-        }
-        recordError(e) {
-            this.error.push(e);
         }
         start() {
             return __awaiter(this, void 0, void 0, function* () {
@@ -1281,11 +1456,11 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                 }
                 catch (e) {
                     this.recordError(e);
-                    this.setStatus(STATUS.FAILED);
+                    this.setStatus(status_5.STATUS.FAILED);
                     return;
                 }
                 try {
-                    if (this.ctx.length === this.file.getBlocks().length) {
+                    if (this.ctx.size === this.file.getChunksSize()) {
                         const data = yield this.createFile();
                         if (data.code) {
                             throw new Error(`Create: ${data.message}`);
@@ -1295,12 +1470,12 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                             throw new Error(`Warning: File check failed`);
                         }
                         this.setNormalFile(res);
-                        this.setStatus(STATUS.DONE);
+                        this.setStatus(status_5.STATUS.DONE);
                         return;
                     }
                     this.setPos();
-                    this.pos.filter(p => p.status === STATUS.PENDING).map(v => {
-                        v.status = STATUS.UPLOADING;
+                    this.pos.filter(p => p.status === status_5.STATUS.PENDING).map(v => {
+                        v.status = status_5.STATUS.UPLOADING;
                         this.blockStart(v);
                     });
                 }
@@ -1312,29 +1487,9 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                 }
             });
         }
-        setNormalFile(file) {
-            this.normalFile = file;
-        }
-        createFile() {
-            const http = this._http();
-            const { clientConfig, apis } = WebFile.default;
-            return http.post({
-                url: this.tokenInfo.partUploadUrl + apis.mkfile + this.file.size,
-                data: Array.from(this.ctx).map(ctx => ctx[ctx.length - 1]).toString(),
-                credentials: 'omit',
-                config: merge_1.default({}, clientConfig, {
-                    baseURL: this.tokenInfo.partUploadUrl,
-                    headers: {
-                        'Authorization': this.tokenInfo.uploadToken,
-                        'UploadBatch': this.file.batch,
-                        'Content-Type': 'text/plain;charset=UTF-8'
-                    }
-                })
-            });
-        }
         setPos() {
             let pos = Math.max.apply(null, this.pos.length ? this.pos.map(p => p.index) : [-1]);
-            this.pos = this.pos.filter((pos) => pos.status !== STATUS.DONE);
+            this.pos = this.pos.filter((pos) => pos.status !== status_5.STATUS.DONE);
             let len = WebFile.default.concurrency - this.pos.length;
             if (len < 0) {
                 len = 0;
@@ -1344,7 +1499,7 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                 if (this.file.getBlockByIndex(pos)) {
                     this.pos.push({
                         index: pos,
-                        status: STATUS.PENDING
+                        status: status_5.STATUS.PENDING
                     });
                 }
                 len--;
@@ -1360,7 +1515,7 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                     if (res.code) {
                         throw new Error(`Chunk: ${res.message}`);
                     }
-                    this.setCtx(res.ctx, chunk);
+                    this.ctx.add(res.ctx, chunk);
                     return res.ctx;
                 });
             }
@@ -1372,79 +1527,18 @@ define("index", ["require", "exports", "core/file", "qetag/index", "http/index",
                     const block = this.file.getBlockByIndex(info.index);
                     const chunks = block.getChunks();
                     yield this._orderTask(chunks);
-                    info.status = STATUS.DONE;
+                    info.status = status_5.STATUS.DONE;
                     this.start();
                 }
                 catch (e) {
-                    info.status = STATUS.PENDING;
+                    info.status = status_5.STATUS.PENDING;
                     this.recordError(e);
-                    this.removeCtx(info.index);
+                    this.ctx.remove(info.index);
                     this.markTry();
                     this.start();
                 }
             });
         }
-        removeCtx(index) {
-            delete this.ctx[index];
-        }
-        setCtx(ctx, chunk) {
-            if (chunk.index === 0) {
-                this.ctx[chunk.block.index] = [];
-            }
-            this.ctx[chunk.block.index][chunk.index] = ctx;
-            if (this.ctx[chunk.block.index].length === chunk.block.getChunks().length) {
-                this.ctx.length += 1;
-            }
-        }
-        chunkUpload(chunk, ctx) {
-            const http = this._http();
-            const { clientConfig, apis } = WebFile.default;
-            const config = {
-                url: '',
-                data: chunk.blob,
-                credentials: 'omit',
-                config: merge_1.default({}, clientConfig, {
-                    baseURL: this.tokenInfo.partUploadUrl,
-                    headers: {
-                        'Authorization': this.tokenInfo.uploadToken,
-                        'UploadBatch': this.file.batch,
-                        'Content-Type': 'application/octet-stream'
-                    }
-                })
-            };
-            if (chunk.index === 0) {
-                config.url = `${apis.mkblk}${chunk.block.size}/${chunk.block.index}`;
-            }
-            else {
-                config.url = `${apis.bput}${ctx}/${chunk.startByte}`;
-            }
-            config.url = this.tokenInfo.partUploadUrl + config.url;
-            return http.post(config, {
-                isTransferablesSupported: index_3.default.isTransferablesSupported(),
-                isEmitEvent: true
-            });
-        }
     }
     exports.WebFile = WebFile;
-    WebFile.default = {
-        clientConfig: {
-            baseURL: 'https://api.6pan.cn',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        },
-        apis: {
-            token: '/v3/file/uploadToken',
-            mkblk: '/mkblk/',
-            bput: '/bput/',
-            mkfile: '/mkfile/'
-        },
-        AuthorizationTokenKey: 'qingzhen-token',
-        AuthorizationStorageKey: 'user-authorization-token',
-        chunkRetry: 3,
-        blockSize: 4 * 1024 * 1024,
-        chunkSize: 1 * 1024 * 1024,
-        concurrency: 3,
-        taskConcurrencyInWorkers: 3,
-    };
 });

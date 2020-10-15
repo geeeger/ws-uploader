@@ -83,6 +83,7 @@
     "./test",
     "./example",
     "./__tests__",
-    "./jest.config.js"
+    "./jest.config.js",
+    "./coverage"
   ]
 }

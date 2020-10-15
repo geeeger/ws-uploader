@@ -69,8 +69,10 @@ export class WebFile extends Service {
                 return;
             }
             this.setStatus(STATUS.PREPARING);
-            const result = await this.getTokenInfo();
-            this.setFileInfo(result);
+            if (!this.isUploadInfoExist()) {
+                const result = await this.getTokenInfo();
+                this.setFileInfo(result);
+            }
             if (this.isExisted()) {
                 this.setStatus(STATUS.DONE);
                 return;

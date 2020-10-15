@@ -5,7 +5,7 @@ import WorkerClient from "./http/worker";
 import QeTag from "./qetag/index";
 import QeTagNormal from "./qetag/normal";
 import QeTagWorker from "./qetag/worker";
-import WorkerProvider from "./worker";
+import WorkerProvider from "./worker/index";
 import QeTagWorkerScript from './qetag/worker-script';
 import uploaderWorkerScript from './http/worker-script';
 import QZFile from "./core/file";
@@ -260,6 +260,10 @@ export default class Service extends Status {
         }
     }
 
+    isUploadInfoExist(): boolean {
+        return Boolean(this.normalFile) || Boolean(this.tokenInfo.uploadToken)
+    }
+
     /**
      * @description 直接设置接口返回的文件信息
      * @param {UploadedFileInfo} file
@@ -443,7 +447,7 @@ export default class Service extends Status {
         } = Service.default;
         return http.post<any>({
             url: this.tokenInfo.partUploadUrl + apis.mkfile + this.file.size,
-            data: this.ctx.toString(),
+            data: this.ctx.toCtxString(),
             credentials: 'omit',
             config: merge(
                 {},
@@ -516,7 +520,7 @@ export default class Service extends Status {
     }
 
     /**
-     * @description 请求并获取上传token信息
+     * @description 请求并获取上传token信息, 只获取一次,复用token
      * @returns {Promise<TokenInfo>}
      * @memberof Service
      */

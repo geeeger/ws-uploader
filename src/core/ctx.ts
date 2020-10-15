@@ -34,16 +34,17 @@ export default class Ctx {
     remove(index: number): void {
         if (this.ctx[index]) {
             delete this.ctx[index]
+            this.ctx.length -= 1
         }
-        this.fixLength()
     }
 
     add(ctx: string, chunk: Chunk): void {
         if (chunk.index === 0) {
             this.ctx[chunk.block.index] = []
+            this.ctx.length += 1
         }
         this.ctx[chunk.block.index][chunk.index] = ctx
-        this.fixLength()
+        // this.fixLength()
     }
 
     toArray(): string[] {
@@ -58,11 +59,11 @@ export default class Ctx {
         return this.clearArray().length === this.ctx.length;
     }
 
-    fixLength(): void {
-        this.ctx.length = this.clearArray().length;
-    }
+    // fixLength(): void {
+    //     this.ctx.length = this.clearArray().length;
+    // }
 
-    toString(): string {
+    toCtxString(): string {
         return this.clearArray().map(ctx => ctx[ctx.length - 1]).toString();
     }
 
