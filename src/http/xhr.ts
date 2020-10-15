@@ -4,6 +4,13 @@ import { HttpClientProps } from "../interface";
 import { guid } from '../core/utils';
 import HttpClient from './base';
 
+/**
+ * @description xhr服务
+ * @export
+ * @class Http
+ * @extends {HttpClient}
+ * @implements {Interface.HttpClient}
+ */
 export default class Http extends HttpClient implements Interface.HttpClient {
     public channel: string;
 

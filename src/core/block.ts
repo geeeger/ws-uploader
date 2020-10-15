@@ -2,6 +2,12 @@ import * as Interface from "../interface";
 import Chunk from "./chunk";
 import QZFile from "./file";
 
+/**
+ * @description 生成上传所需块结构的构造器
+ * @export
+ * @class Block
+ * @implements {Interface.Block}
+ */
 export default class Block implements Interface.Block {
     public startByte: number;
     public endByte: number;

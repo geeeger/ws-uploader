@@ -1,5 +1,10 @@
 import Chunk from "./chunk";
 
+/**
+ * @description 提供管理上传分片上下文的服务
+ * @export
+ * @class Ctx
+ */
 export default class Ctx {
     ctx: {
         [key: string]: any;

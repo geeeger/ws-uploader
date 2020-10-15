@@ -1,3 +1,9 @@
+/**
+ * @description worker请求脚本
+ * @export
+ * @param {*} data
+ * @returns {Promise<any>}
+ */
 export default function handler(data: any): Promise<any> {
     const payload = data.payload;
 

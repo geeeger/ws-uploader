@@ -2,6 +2,12 @@
 import * as Interface from "../interface";
 import Block from "./block";
 
+/**
+ * @description 生成上传所需的片结构的构造器
+ * @export
+ * @class Chunk
+ * @implements {Interface.Chunk}
+ */
 export default class Chunk implements Interface.Chunk {
     public block: Block;
     public startByte: number;

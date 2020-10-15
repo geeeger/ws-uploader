@@ -8,6 +8,12 @@ let uid = 1;
 
 export type QZFileProps = Interface.QZFileProps;
 
+/**
+ * @description 生成上传所需的文件结构构造器
+ * @export
+ * @class QZFile
+ * @implements {Interface.QZFile}
+ */
 export default class QZFile implements Interface.QZFile {
     public file: File;
     public batch: string;

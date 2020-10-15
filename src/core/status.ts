@@ -1,16 +1,15 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { STATUS, TASK_STATUS_INFO, UPLOADING_STATUS } from "../constants/status";
+import Base from "./base";
 
-export * from '../constants/status';
+export { STATUS, TASK_STATUS_INFO, UPLOADING_STATUS } from '../constants/status';
 
-class Status {
+class Status extends Base {
     status: STATUS = STATUS.PENDING
 
     _statusHandlers: {
         [key: string]: Function
     } = {}
-
-    progress = 0
 
     tryCount = 0
 
@@ -61,6 +60,10 @@ class Status {
 
     isFailed(): boolean {
         return this.status === STATUS.FAILED;
+    }
+
+    isTryout(): boolean {
+        return this.tryCount > Base.default.chunkRetry;
     }
 
     isDone(): boolean {

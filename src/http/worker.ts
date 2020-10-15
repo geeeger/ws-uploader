@@ -3,6 +3,13 @@ import { HttpClientProps } from "../interface";
 import { guid } from "../core/utils";
 import HttpClient from "./base";
 
+/**
+ * @description worker http服务
+ * @export
+ * @class HttpWorker
+ * @extends {HttpClient}
+ * @implements {Interface.HttpClient}
+ */
 export default class HttpWorker extends HttpClient implements Interface.HttpClient {
     public workers: Interface.WorkersProvider;
     public channel: string;

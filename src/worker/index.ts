@@ -1,6 +1,13 @@
 import { EventEmitter } from "events";
 import * as Interface from "../interface";
 
+/**
+ * @description 管理worker线程工具
+ * @export
+ * @class WorkerProvider
+ * @extends {EventEmitter}
+ * @implements {Interface.WorkersProvider}
+ */
 export default class WorkerProvider extends EventEmitter implements Interface.WorkersProvider {
     taskConcurrency: number;
     public static isTransferablesSupported(): boolean {
