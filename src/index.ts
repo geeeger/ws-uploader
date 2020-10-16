@@ -12,6 +12,7 @@ interface UplaodConfig {
      */
     adapter?: AdapterType;
     onStatusChange?: (ctx: WebFile, status: STATUS) => any;
+    debug?: boolean
 }
 
 export class WebFile extends Service {
@@ -69,8 +70,15 @@ export class WebFile extends Service {
             }
             this.setStatus(STATUS.PREPARING);
             if (!this.isUploadInfoExist()) {
-                const result = await this.getTokenInfo();
-                this.setFileInfo(result);
+                // 如果一次获取token失败，直接抛错停止流程
+                try {
+                    const result = await this.getTokenInfo();
+                    this.setFileInfo(result);
+                } catch (e) {
+                    this.recordError(e);
+                    this.setStatus(STATUS.FAILED);
+                    return;
+                }
             }
             if (this.isExisted()) {
                 this.setStatus(STATUS.DONE);
@@ -137,8 +145,11 @@ export class WebFile extends Service {
         }
         catch (e) {
             this.recordError(e);
-            this.markTry();
-            this.start();
+            // 当一次tryout后，不再执行
+            if (!this.isTryout()) {
+                this.markTry();
+                this.start();
+            }
             return;
         }
     }
@@ -191,9 +202,12 @@ export class WebFile extends Service {
         catch (e) {
             info.status = STATUS.PENDING;
             this.recordError(e);
-            this.ctx.remove(info.index);
-            this.markTry();
-            this.start();
+            this.ctx.clear(info.index);
+            // 当一次tryout后，不再执行
+            if (!this.isTryout()) {
+                this.markTry();
+                this.start();
+            }
         }
     }
 }

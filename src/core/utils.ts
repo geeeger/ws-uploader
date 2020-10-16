@@ -109,3 +109,11 @@ export function sizeToStr(size: number): string {
     }
     return '';
 }
+
+export function log(debug: boolean): any {
+    return function (...args: any[]) {
+        if (debug) {
+            console.log.apply(null, args)
+        }
+    }
+}

@@ -31,6 +31,12 @@ export default class Ctx {
         return this.ctx.length;
     }
 
+    clear(index: number): void {
+        if (this.ctx[index]) {
+            this.ctx[index] = []
+        }
+    }
+
     remove(index: number): void {
         if (this.ctx[index]) {
             delete this.ctx[index]
@@ -40,8 +46,10 @@ export default class Ctx {
 
     add(ctx: string, chunk: Chunk): void {
         if (chunk.index === 0) {
-            this.ctx[chunk.block.index] = []
-            this.ctx.length += 1
+            if (!this.ctx[chunk.block.index]) {
+                this.ctx[chunk.block.index] = []
+                this.ctx.length += 1
+            }
         }
         this.ctx[chunk.block.index][chunk.index] = ctx
         // this.fixLength()

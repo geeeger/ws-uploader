@@ -10,7 +10,7 @@ import QeTagWorkerScript from './qetag/worker-script';
 import uploaderWorkerScript from './http/worker-script';
 import QZFile from "./core/file";
 import Http from "./http/index";
-import { createThrottle, sizeToStr } from "./core/utils";
+import { createThrottle, log, sizeToStr } from "./core/utils";
 import { STATUS } from "./constants/status";
 import Ctx from "./core/ctx";
 import Chunk from "./core/chunk";
@@ -29,6 +29,7 @@ export interface UplaodConfig {
     adapter?: AdapterType;
     // eslint-disable-next-line @typescript-eslint/ban-types
     onStatusChange?: Function;
+    debug?: boolean;
 }
 
 export type FileProps = {
@@ -118,7 +119,7 @@ export default class Service extends Status {
      * @type {{ adapter: AdapterType; onStatusChange: Function }}
      * @memberof Service
      */
-    config: { adapter: AdapterType; onStatusChange: Function };
+    config: { adapter: AdapterType; onStatusChange: Function; debug?: boolean };
 
     /**
      * @description 文件属性
@@ -203,6 +204,8 @@ export default class Service extends Status {
      */
     normalFile?: UploadedFileInfo;
 
+    log: any;
+
     /**
      *Creates an instance of Service.
      * @param {File} file
@@ -229,6 +232,8 @@ export default class Service extends Status {
             // eslint-disable-next-line @typescript-eslint/no-empty-function
             onStatusChange: function () {}
         }, config);
+
+        this.log = log(Boolean(this.config.debug))
         this.sizeStr = sizeToStr(this.file.size);
         this.ctx = new Ctx()
         this._setStatusHandler();
