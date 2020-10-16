@@ -1,5 +1,11 @@
-import Xhr from "../../src/http/xhr";
+import { TASK_STATUS_INFO } from './../../src/constants/status';
+import { STATUS, WebFile } from './../../src/index';
+import './../../scripts/setup.d';
 import fetchMock from "jest-fetch-mock";
+import { Crypto } from "@peculiar/webcrypto";
+
+jest.setTimeout(5000)
+global.crypto = new Crypto()
 
 describe('test src/index.js', () => {
     beforeEach(() => {
@@ -43,14 +49,26 @@ describe('test src/index.js', () => {
                 return Promise.resolve({
                     body: JSON.stringify({
                         hash: 'li5xMevZpwZSfINNGuVUI2WF42rb68roi',
-                        response: {}
+                        response: '{"hash": "li5xMevZpwZSfINNGuVUI2WF42rb68roi"}'
                     })
                 })
             }
         })
     })
 
-    it('test class', () => {
-        expect(1).toBe(1)
+    it('test upload success', async (done) => {
+        expect.assertions(1)
+
+        let file = MockFile('test.wtf', 10 * 1024 * 1024 + 1058, 'plain/text')
+        let uploader = new WebFile(file, {}, {
+            adapter: 'Normal',
+            onStatusChange: (ctx, status) => {
+                if (status === STATUS.DONE) {
+                    expect(ctx.ctx.toCtxString()).toBe('9,10,8')
+                    done()
+                }
+            }
+        })
+        uploader.upload()
     })
 })

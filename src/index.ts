@@ -11,13 +11,12 @@ interface UplaodConfig {
      * adapter
      */
     adapter?: AdapterType;
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    onStatusChange?: Function;
+    onStatusChange?: (ctx: WebFile, status: STATUS) => any;
 }
 
 export class WebFile extends Service {
     pos: any[] = [];
-    constructor (file: File, fileProps: FileProps = {} as FileProps, config: UplaodConfig = {}) {
+    constructor (file: File, fileProps: FileProps = {}, config: UplaodConfig = {}) {
         super(file, fileProps, config);
     }
 
@@ -114,6 +113,11 @@ export class WebFile extends Service {
         try {
             if (this.ctx.size === this.file.getChunksSize()) {
                 const data = await this.createFile();
+                // 测试用例里一种意外情况，请求太快（mock），（调起两次start）两次start都执行到这里
+                // 在目前现实世界中不会出现这种问题，当然，为了过测试，加一段代码
+                if (this.isDone()) {
+                    return;
+                }
                 if (data.code) {
                     throw new Error(`Create: ${data.message}`);
                 }

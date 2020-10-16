@@ -32,9 +32,9 @@ export interface UplaodConfig {
 }
 
 export type FileProps = {
-    path: string;
-    parent: string;
-    op: number;
+    path?: string;
+    parent?: string;
+    op?: number;
 };
 
 export interface BPutResponse{
@@ -210,7 +210,7 @@ export default class Service extends Status {
      * @param {UplaodConfig} [config={}]
      * @memberof Service
      */
-    constructor(file: File, fileProps: FileProps = {} as FileProps, config: UplaodConfig = {}) {
+    constructor(file: File, fileProps: FileProps = {}, config: UplaodConfig = {}) {
         super();
         
         this.file = new QZFile({

@@ -17,7 +17,7 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
             const fr = new FileReader();
             fr.onload = async (): Promise<any> => {
                 if (fr.result) {
-                    const sha1 = await window.crypto.subtle.digest('SHA-1', fr.result as ArrayBuffer)
+                    const sha1 = await crypto.subtle.digest('SHA-1', fr.result as ArrayBuffer)
                     resolve(sha1);
                 } else {
                     reject(new Error("Read file error!"));
@@ -42,7 +42,12 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
         if (this.hash) {
             return Promise.resolve(this.hash);
         }
-        if (!window.crypto.subtle) {
+        if (typeof crypto === 'undefined') {
+            const error = new Error('Crypto API Error: crypto is not support');
+            // console.error(error);
+            return Promise.reject(error);
+        }
+        if (!crypto.subtle) {
             const error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
             // console.error(error);
             return Promise.reject(error);
@@ -78,7 +83,7 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
                     } else {
                         perfex = 0x80 | perfex;
                         hash = hashs.reduce((a, b): ArrayBuffer => concatBuffer(a, b));
-                        hash = await window.crypto.subtle.digest('SHA-1', hash);
+                        hash = await crypto.subtle.digest('SHA-1', hash);
                     }
                     const byte = new ArrayBuffer(1);
                     const dv = new DataView(byte);

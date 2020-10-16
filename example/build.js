@@ -1,6 +1,30 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -9,6 +33,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
 };
 define("interface", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -19,9 +70,9 @@ define("core/utils", ["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.sizeToStr = exports.createThrottle = exports.urlSafeBase64 = exports.arrayBufferToBase64 = exports.concatBuffer = exports.isObject = exports.isBlob = exports.guid = void 0;
     function guid() {
-        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-            const r = (Math.random() * 16) | 0;
-            const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+            var r = (Math.random() * 16) | 0;
+            var v = c === "x" ? r : (r & 0x3) | 0x8;
             return v.toString(16);
         });
     }
@@ -35,17 +86,17 @@ define("core/utils", ["require", "exports"], function (require, exports) {
     }
     exports.isObject = isObject;
     function concatBuffer(buf1, buf2) {
-        const tmp = new Uint8Array(buf1.byteLength + buf2.byteLength);
+        var tmp = new Uint8Array(buf1.byteLength + buf2.byteLength);
         tmp.set(new Uint8Array(buf1), 0);
         tmp.set(new Uint8Array(buf2), buf1.byteLength);
         return tmp.buffer;
     }
     exports.concatBuffer = concatBuffer;
     function arrayBufferToBase64(buffer) {
-        let binary = '';
-        const bytes = new Uint8Array(buffer);
-        const len = bytes.byteLength;
-        for (let i = 0; i < len; i++) {
+        var binary = '';
+        var bytes = new Uint8Array(buffer);
+        var len = bytes.byteLength;
+        for (var i = 0; i < len; i++) {
             binary += String.fromCharCode(bytes[i]);
         }
         return btoa(binary);
@@ -56,12 +107,12 @@ define("core/utils", ["require", "exports"], function (require, exports) {
     }
     exports.urlSafeBase64 = urlSafeBase64;
     function createThrottle(time) {
-        let timer = null;
+        var timer = null;
         return function throttle(fn) {
             if (timer) {
                 return;
             }
-            timer = setTimeout(() => {
+            timer = setTimeout(function () {
                 fn();
                 timer = null;
             }, time);
@@ -86,10 +137,11 @@ define("core/file", ["require", "exports", "core/block", "core/utils"], function
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     block_1 = __importDefault(block_1);
-    const rExt = /\.([^.]+)$/;
-    let uid = 1;
-    class QZFile {
-        constructor({ file, blockSize, chunkSize, batch, }) {
+    var rExt = /\.([^.]+)$/;
+    var uid = 1;
+    var QZFile = (function () {
+        function QZFile(_a) {
+            var file = _a.file, blockSize = _a.blockSize, chunkSize = _a.chunkSize, batch = _a.batch;
             this.file = file;
             this.blockSize = blockSize || 4 * 1024 * 1024;
             this.batch = batch || utils_1.guid();
@@ -98,7 +150,7 @@ define("core/file", ["require", "exports", "core/block", "core/utils"], function
             this.lastModified = file.lastModified || new Date().getTime();
             this.blocks = [];
             this.chunkSize = chunkSize || 1 * 1024 * 1024;
-            let ext = rExt.exec(file.name) ? RegExp.$1.toLowerCase() : "";
+            var ext = rExt.exec(file.name) ? RegExp.$1.toLowerCase() : "";
             if (!ext && file.type) {
                 ext = /\/(jpg|jpeg|png|gif|bmp)$/i.exec(file.type) ? RegExp.$1.toLowerCase() : "";
                 if (ext) {
@@ -113,19 +165,19 @@ define("core/file", ["require", "exports", "core/block", "core/utils"], function
                 this.type = file.type || "application/octet-stream";
             }
         }
-        slice(start, end) {
-            const file = this.file;
-            const slice = file.slice;
+        QZFile.prototype.slice = function (start, end) {
+            var file = this.file;
+            var slice = file.slice;
             return slice.call(file, start, end);
-        }
-        getBlocks() {
+        };
+        QZFile.prototype.getBlocks = function () {
             if (this.blocks.length) {
                 return this.blocks;
             }
-            let startByte = 0;
-            const blocks = [];
+            var startByte = 0;
+            var blocks = [];
             while (startByte < this.size) {
-                let endByte = startByte + this.blockSize;
+                var endByte = startByte + this.blockSize;
                 if (endByte > this.size) {
                     endByte = this.size;
                 }
@@ -134,35 +186,36 @@ define("core/file", ["require", "exports", "core/block", "core/utils"], function
             }
             this.blocks = blocks;
             return blocks;
-        }
-        getBlockByIndex(index) {
+        };
+        QZFile.prototype.getBlockByIndex = function (index) {
             return this.getBlocks()[index];
-        }
-        getChunksSize() {
-            return this.getBlocks().map(block => block.getChunks().length).reduce((a, b) => a + b, 0);
-        }
-    }
+        };
+        QZFile.prototype.getChunksSize = function () {
+            return this.getBlocks().map(function (block) { return block.getChunks().length; }).reduce(function (a, b) { return a + b; }, 0);
+        };
+        return QZFile;
+    }());
     exports.default = QZFile;
 });
 define("core/block", ["require", "exports", "core/chunk"], function (require, exports, chunk_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     chunk_1 = __importDefault(chunk_1);
-    class Block {
-        constructor(file, startByte, endByte) {
+    var Block = (function () {
+        function Block(file, startByte, endByte) {
             this.file = file;
             this.startByte = startByte;
             this.endByte = endByte;
             this.chunks = [];
         }
-        getChunks() {
+        Block.prototype.getChunks = function () {
             if (this.chunks.length) {
                 return this.chunks;
             }
-            let startByte = 0;
-            const chunks = [];
+            var startByte = 0;
+            var chunks = [];
             while (startByte < this.size) {
-                let endByte = startByte + this.file.chunkSize;
+                var endByte = startByte + this.file.chunkSize;
                 if (endByte > this.size) {
                     endByte = this.size;
                 }
@@ -171,48 +224,75 @@ define("core/block", ["require", "exports", "core/chunk"], function (require, ex
             }
             this.chunks = chunks;
             return chunks;
-        }
-        getChunkByIndex(index) {
+        };
+        Block.prototype.getChunkByIndex = function (index) {
             return this.getChunks()[index];
-        }
-        get size() {
-            return this.endByte - this.startByte;
-        }
-        get index() {
-            return Math.round(this.startByte / this.file.blockSize);
-        }
-        get blob() {
-            return this.file.slice(this.startByte, this.endByte);
-        }
-    }
+        };
+        Object.defineProperty(Block.prototype, "size", {
+            get: function () {
+                return this.endByte - this.startByte;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Block.prototype, "index", {
+            get: function () {
+                return Math.round(this.startByte / this.file.blockSize);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Block.prototype, "blob", {
+            get: function () {
+                return this.file.slice(this.startByte, this.endByte);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return Block;
+    }());
     exports.default = Block;
 });
 define("core/chunk", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class Chunk {
-        constructor(block, startByte, endByte) {
+    var Chunk = (function () {
+        function Chunk(block, startByte, endByte) {
             this.block = block;
             this.startByte = startByte;
             this.endByte = endByte;
         }
-        get size() {
-            return this.endByte - this.startByte;
-        }
-        get index() {
-            return Math.floor(this.startByte / this.block.file.chunkSize);
-        }
-        get blob() {
-            const block = this.block;
-            const file = block.file;
-            const offset = block.index * file.blockSize;
-            return file.slice(offset + this.startByte, offset + this.endByte);
-        }
-    }
+        Object.defineProperty(Chunk.prototype, "size", {
+            get: function () {
+                return this.endByte - this.startByte;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Chunk.prototype, "index", {
+            get: function () {
+                return Math.floor(this.startByte / this.block.file.chunkSize);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Chunk.prototype, "blob", {
+            get: function () {
+                var block = this.block;
+                var file = block.file;
+                var offset = block.index * file.blockSize;
+                return file.slice(offset + this.startByte, offset + this.endByte);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return Chunk;
+    }());
     exports.default = Chunk;
 });
 define("constants/status", ["require", "exports"], function (require, exports) {
     "use strict";
+    var _a, _b;
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.UPLOADING_STATUS = exports.TASK_STATUS_INFO = exports.STATUS = void 0;
     var STATUS;
@@ -226,21 +306,21 @@ define("constants/status", ["require", "exports"], function (require, exports) {
         STATUS[STATUS["CANCEL"] = 7] = "CANCEL";
         STATUS[STATUS["PAUSE"] = 8] = "PAUSE";
     })(STATUS = exports.STATUS || (exports.STATUS = {}));
-    exports.TASK_STATUS_INFO = {
-        [STATUS.PENDING]: '排队中...',
-        [STATUS.PREPARING]: '准备中...',
-        [STATUS.UPLOADING]: '上传中...',
-        [STATUS.CALCULATING]: '计算中...',
-        [STATUS.FAILED]: '上传失败',
-        [STATUS.DONE]: '上传完成',
-        [STATUS.CANCEL]: '取消上传',
-        [STATUS.PAUSE]: '暂停上传'
-    };
-    exports.UPLOADING_STATUS = {
-        [STATUS.PREPARING]: 1,
-        [STATUS.UPLOADING]: 1,
-        [STATUS.CALCULATING]: 1
-    };
+    exports.TASK_STATUS_INFO = (_a = {},
+        _a[STATUS.PENDING] = '排队中...',
+        _a[STATUS.PREPARING] = '准备中...',
+        _a[STATUS.UPLOADING] = '上传中...',
+        _a[STATUS.CALCULATING] = '计算中...',
+        _a[STATUS.FAILED] = '上传失败',
+        _a[STATUS.DONE] = '上传完成',
+        _a[STATUS.CANCEL] = '取消上传',
+        _a[STATUS.PAUSE] = '暂停上传',
+        _a);
+    exports.UPLOADING_STATUS = (_b = {},
+        _b[STATUS.PREPARING] = 1,
+        _b[STATUS.UPLOADING] = 1,
+        _b[STATUS.CALCULATING] = 1,
+        _b);
 });
 define("constants/uploader-config", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -273,31 +353,43 @@ define("third-parts/merge", ["require", "exports"], function (require, exports) 
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isPlainObject = exports.clone = exports.recursive = exports.merge = exports.main = void 0;
     exports.default = main;
-    function main(...items) {
-        return merge(...items);
+    function main() {
+        var items = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            items[_i] = arguments[_i];
+        }
+        return merge.apply(void 0, items);
     }
     exports.main = main;
     main.clone = clone;
     main.isPlainObject = isPlainObject;
     main.recursive = recursive;
-    function merge(...items) {
+    function merge() {
+        var items = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            items[_i] = arguments[_i];
+        }
         return _merge(items[0] === true, false, items);
     }
     exports.merge = merge;
-    function recursive(...items) {
+    function recursive() {
+        var items = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            items[_i] = arguments[_i];
+        }
         return _merge(items[0] === true, true, items);
     }
     exports.recursive = recursive;
     function clone(input) {
         if (Array.isArray(input)) {
-            const output = [];
-            for (let index = 0; index < input.length; ++index)
+            var output = [];
+            for (var index = 0; index < input.length; ++index)
                 output.push(clone(input[index]));
             return output;
         }
         else if (isPlainObject(input)) {
-            const output = {};
-            for (const index in input)
+            var output = {};
+            for (var index in input)
                 output[index] = clone(input[index]);
             return output;
         }
@@ -313,24 +405,24 @@ define("third-parts/merge", ["require", "exports"], function (require, exports) 
     function _recursiveMerge(base, extend) {
         if (!isPlainObject(base))
             return extend;
-        for (const key in extend)
+        for (var key in extend)
             base[key] = (isPlainObject(base[key]) && isPlainObject(extend[key])) ?
                 _recursiveMerge(base[key], extend[key]) :
                 extend[key];
         return base;
     }
     function _merge(isClone, isRecursive, items) {
-        let result;
+        var result;
         if (isClone || !isPlainObject(result = items.shift()))
             result = {};
-        for (let index = 0; index < items.length; ++index) {
-            const item = items[index];
+        for (var index = 0; index < items.length; ++index) {
+            var item = items[index];
             if (!isPlainObject(item))
                 continue;
-            for (const key in item) {
+            for (var key in item) {
                 if (key === '__proto__')
                     continue;
-                const value = isClone ? clone(item[key]) : item[key];
+                var value = isClone ? clone(item[key]) : item[key];
                 result[key] = isRecursive ? _recursiveMerge(result[key], value) : value;
             }
         }
@@ -340,13 +432,16 @@ define("third-parts/merge", ["require", "exports"], function (require, exports) 
 define("core/base", ["require", "exports", "constants/uploader-config", "third-parts/merge"], function (require, exports, uploader_config_1, merge_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class Base {
-        static config(config) {
-            Base.default = merge_1.merge(Base.default, config);
+    var Base = (function () {
+        function Base() {
         }
-    }
+        Base.config = function (config) {
+            Base.default = merge_1.merge(Base.default, config);
+        };
+        Base.default = uploader_config_1.UploaderConfig;
+        return Base;
+    }());
     exports.default = Base;
-    Base.default = uploader_config_1.UploaderConfig;
 });
 define("core/status", ["require", "exports", "constants/status", "core/base", "constants/status"], function (require, exports, status_1, base_1, status_2) {
     "use strict";
@@ -356,205 +451,228 @@ define("core/status", ["require", "exports", "constants/status", "core/base", "c
     Object.defineProperty(exports, "STATUS", { enumerable: true, get: function () { return status_2.STATUS; } });
     Object.defineProperty(exports, "TASK_STATUS_INFO", { enumerable: true, get: function () { return status_2.TASK_STATUS_INFO; } });
     Object.defineProperty(exports, "UPLOADING_STATUS", { enumerable: true, get: function () { return status_2.UPLOADING_STATUS; } });
-    class Status extends base_1.default {
-        constructor() {
-            super(...arguments);
-            this.status = status_1.STATUS.PENDING;
-            this._statusHandlers = {};
+    var Status = (function (_super) {
+        __extends(Status, _super);
+        function Status() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.status = status_1.STATUS.PENDING;
+            _this._statusHandlers = {};
+            _this.tryCount = 0;
+            _this.error = [];
+            return _this;
+        }
+        Object.defineProperty(Status.prototype, "statusInfo", {
+            get: function () {
+                return status_1.TASK_STATUS_INFO[this.status];
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Status.prototype.restTryCount = function () {
             this.tryCount = 0;
-            this.error = [];
-        }
-        get statusInfo() {
-            return status_1.TASK_STATUS_INFO[this.status];
-        }
-        restTryCount() {
-            this.tryCount = 0;
-        }
-        getError() {
+        };
+        Status.prototype.getError = function () {
             return this.error;
-        }
-        recordError(e) {
+        };
+        Status.prototype.recordError = function (e) {
             this.error.push(e);
-        }
-        markTry(tryNum) {
+        };
+        Status.prototype.markTry = function (tryNum) {
             if (tryNum) {
                 this.tryCount = tryNum;
             }
             else {
                 this.tryCount++;
             }
-        }
-        addStatusHandler(status, handler) {
+        };
+        Status.prototype.addStatusHandler = function (status, handler) {
             this._statusHandlers[status] = handler;
             return this;
-        }
-        setStatus(status) {
+        };
+        Status.prototype.setStatus = function (status) {
             this.status = status;
-            const handler = this._statusHandlers[status];
+            var handler = this._statusHandlers[status];
             if (handler) {
                 handler();
             }
-        }
-        isUploading() {
+        };
+        Status.prototype.isUploading = function () {
             return this.status in status_1.UPLOADING_STATUS;
-        }
-        isFailed() {
+        };
+        Status.prototype.isFailed = function () {
             return this.status === status_1.STATUS.FAILED;
-        }
-        isTryout() {
+        };
+        Status.prototype.isTryout = function () {
             return this.tryCount > base_1.default.default.chunkRetry;
-        }
-        isDone() {
+        };
+        Status.prototype.isDone = function () {
             return this.status === status_1.STATUS.DONE;
-        }
-        isPending() {
+        };
+        Status.prototype.isPending = function () {
             return this.status === status_1.STATUS.PENDING;
-        }
-        isCancel() {
+        };
+        Status.prototype.isCancel = function () {
             return this.status === status_1.STATUS.CANCEL;
-        }
-        isCalculating() {
+        };
+        Status.prototype.isCalculating = function () {
             return this.status === status_1.STATUS.CALCULATING;
-        }
-        isPreparing() {
+        };
+        Status.prototype.isPreparing = function () {
             return this.status === status_1.STATUS.PREPARING;
-        }
-        isPaused() {
+        };
+        Status.prototype.isPaused = function () {
             return this.status === status_1.STATUS.PAUSE;
-        }
-    }
+        };
+        return Status;
+    }(base_1.default));
     exports.default = Status;
 });
 define("http/base", ["require", "exports", "events"], function (require, exports, events_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class HttpClient extends events_1.EventEmitter {
-        constructor() {
-            super();
+    var HttpClient = (function (_super) {
+        __extends(HttpClient, _super);
+        function HttpClient() {
+            return _super.call(this) || this;
         }
-    }
+        HttpClient.Events = {
+            UpdateProgress: 'UpdateProgress'
+        };
+        return HttpClient;
+    }(events_1.EventEmitter));
     exports.default = HttpClient;
-    HttpClient.Events = {
-        UpdateProgress: 'UpdateProgress'
-    };
 });
 define("http/xhr", ["require", "exports", "core/utils", "http/base"], function (require, exports, utils_2, base_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     base_2 = __importDefault(base_2);
-    class Http extends base_2.default {
-        constructor(_) {
-            super();
-            this.channel = utils_2.guid();
+    var Http = (function (_super) {
+        __extends(Http, _super);
+        function Http(_) {
+            var _this = _super.call(this) || this;
+            _this.channel = utils_2.guid();
+            return _this;
         }
-        post(props, { isEmitEvent } = {}) {
+        Http.prototype.post = function (props, _a) {
+            var _this = this;
+            var isEmitEvent = (_a === void 0 ? {} : _a).isEmitEvent;
             return fetch(props.url, {
                 body: props.data,
                 method: 'POST',
                 mode: 'cors',
                 credentials: props.credentials,
-                headers: Object.assign({}, (props.config
+                headers: __assign({}, (props.config
                     ? props.config.headers
                         ? props.config.headers
                         : {}
                     : {}))
-            }).then(response => {
+            }).then(function (response) {
                 return response.json();
-            }).then(json => {
-                isEmitEvent && this.emit(Http.Events.UpdateProgress, props.data.size);
-                this.removeAllListeners(this.channel);
+            }).then(function (json) {
+                isEmitEvent && _this.emit(Http.Events.UpdateProgress, props.data.size);
+                _this.removeAllListeners(_this.channel);
                 return json;
             });
-        }
-    }
+        };
+        return Http;
+    }(base_2.default));
     exports.default = Http;
 });
 define("http/worker", ["require", "exports", "core/utils", "http/base"], function (require, exports, utils_3, base_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     base_3 = __importDefault(base_3);
-    class HttpWorker extends base_3.default {
-        constructor(opts) {
-            super();
-            this.workers = opts.workers;
-            this.channel = utils_3.guid();
+    var HttpWorker = (function (_super) {
+        __extends(HttpWorker, _super);
+        function HttpWorker(opts) {
+            var _this = _super.call(this) || this;
+            _this.workers = opts.workers;
+            _this.channel = utils_3.guid();
+            return _this;
         }
-        post(props, { isTransferSupported, isEmitEvent } = {}) {
-            return new Promise((resolve, reject) => {
-                const channel = utils_3.guid();
-                this.workers.on(channel, (payload) => {
+        HttpWorker.prototype.post = function (props, _a) {
+            var _this = this;
+            var _b = _a === void 0 ? {} : _a, isTransferSupported = _b.isTransferSupported, isEmitEvent = _b.isEmitEvent;
+            return new Promise(function (resolve, reject) {
+                var channel = utils_3.guid();
+                _this.workers.on(channel, function (payload) {
                     if (payload.type === 'error') {
-                        this.workers.removeAllListeners(channel);
+                        _this.workers.removeAllListeners(channel);
                         reject(payload.data);
                     }
                     if (payload.type === 'progress') {
-                        isEmitEvent && this.emit('UpdateProgress', payload.data);
+                        isEmitEvent && _this.emit('UpdateProgress', payload.data);
                     }
                     else {
-                        this.workers.removeAllListeners(channel);
+                        _this.workers.removeAllListeners(channel);
                         resolve(payload.data);
                     }
                 });
-                const opts = isTransferSupported ? {
+                var opts = isTransferSupported ? {
                     transfer: [props.data]
                 } : undefined;
-                this.workers.send({
+                _this.workers.send({
                     channel: channel,
                     payload: props,
                 }, opts);
             });
-        }
-    }
+        };
+        return HttpWorker;
+    }(base_3.default));
     exports.default = HttpWorker;
 });
 define("qetag/base", ["require", "exports", "events"], function (require, exports, events_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class QETagBase extends events_2.EventEmitter {
-        constructor(file) {
-            super();
-            this.file = file;
-            this.hash = "";
-            this.process = 0;
+    var QETagBase = (function (_super) {
+        __extends(QETagBase, _super);
+        function QETagBase(file) {
+            var _this = _super.call(this) || this;
+            _this.file = file;
+            _this.hash = "";
+            _this.process = 0;
+            return _this;
         }
-        set(hash) {
+        QETagBase.prototype.set = function (hash) {
             this.hash = hash;
-        }
-        getSync() {
+        };
+        QETagBase.prototype.getSync = function () {
             return this.hash;
-        }
-        isExist() {
+        };
+        QETagBase.prototype.isExist = function () {
             return Boolean(this.hash);
-        }
-    }
+        };
+        QETagBase.Events = {
+            UpdateProgress: 'UpdateProgress'
+        };
+        return QETagBase;
+    }(events_2.EventEmitter));
     exports.default = QETagBase;
-    QETagBase.Events = {
-        UpdateProgress: 'UpdateProgress'
-    };
 });
 define("third-parts/throat", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class Delayed {
-        constructor(resolve, fn, self, args) {
+    var Delayed = (function () {
+        function Delayed(resolve, fn, self, args) {
             this.resolve = resolve;
             this.fn = fn;
             this.self = self || null;
             this.args = args;
         }
-    }
-    class Queue {
-        constructor() {
+        return Delayed;
+    }());
+    var Queue = (function () {
+        function Queue() {
             this._s1 = [];
             this._s2 = [];
         }
-        push(value) {
+        Queue.prototype.push = function (value) {
             this._s1.push(value);
-        }
-        shift() {
-            let s2 = this._s2;
+        };
+        Queue.prototype.shift = function () {
+            var s2 = this._s2;
             if (s2.length === 0) {
-                const s1 = this._s1;
+                var s1 = this._s1;
                 if (s1.length === 0) {
                     return;
                 }
@@ -562,18 +680,19 @@ define("third-parts/throat", ["require", "exports"], function (require, exports)
                 s2 = this._s2 = s1.reverse();
             }
             return s2.pop();
-        }
-        isEmpty() {
+        };
+        Queue.prototype.isEmpty = function () {
             return !this._s1.length && !this._s2.length;
-        }
-    }
+        };
+        return Queue;
+    }());
     function throat() {
         function throat(size, fn) {
-            const queue = new Queue();
+            var queue = new Queue();
             function run(fn, self, args) {
                 if (size) {
                     size--;
-                    const result = new Promise(function (resolve) {
+                    var result = new Promise(function (resolve) {
                         resolve(fn.apply(self, args));
                     });
                     result.then(release, release);
@@ -588,12 +707,12 @@ define("third-parts/throat", ["require", "exports"], function (require, exports)
             function release() {
                 size++;
                 if (!queue.isEmpty()) {
-                    const next = queue.shift();
+                    var next = queue.shift();
                     next.resolve(run(next.fn, next.self, next.args));
                 }
             }
             if (typeof size === 'function') {
-                const temp = fn;
+                var temp = fn;
                 fn = size;
                 size = temp;
             }
@@ -605,8 +724,8 @@ define("third-parts/throat", ["require", "exports"], function (require, exports)
             }
             if (typeof fn === 'function') {
                 return function () {
-                    const args = [];
-                    for (let i = 0; i < arguments.length; i++) {
+                    var args = [];
+                    for (var i = 0; i < arguments.length; i++) {
                         args.push(arguments[i]);
                     }
                     return run(fn, this, args);
@@ -617,8 +736,8 @@ define("third-parts/throat", ["require", "exports"], function (require, exports)
                     if (typeof fn !== 'function') {
                         throw new TypeError('Expected throat fn to be a function but got ' + typeof fn);
                     }
-                    const args = [];
-                    for (let i = 1; i < arguments.length; i++) {
+                    var args = [];
+                    for (var i = 1; i < arguments.length; i++) {
                         args.push(arguments[i]);
                     }
                     return run(fn, this, args);
@@ -634,154 +753,197 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
     Object.defineProperty(exports, "__esModule", { value: true });
     throat_1 = __importDefault(throat_1);
     base_4 = __importDefault(base_4);
-    class QETagNormal extends base_4.default {
-        constructor(file, _) {
-            super(file);
-            this.concurrency = window.navigator.hardwareConcurrency || 1;
+    var QETagNormal = (function (_super) {
+        __extends(QETagNormal, _super);
+        function QETagNormal(file, _) {
+            var _this = _super.call(this, file) || this;
+            _this.concurrency = window.navigator.hardwareConcurrency || 1;
+            return _this;
         }
-        loadNext(block) {
-            return new Promise((resolve, reject) => {
-                const fr = new FileReader();
-                fr.onload = () => __awaiter(this, void 0, void 0, function* () {
-                    if (fr.result) {
-                        const sha1 = yield window.crypto.subtle.digest('SHA-1', fr.result);
-                        resolve(sha1);
-                    }
-                    else {
-                        reject(new Error("Read file error!"));
-                    }
-                });
-                fr.onloadend = () => {
+        QETagNormal.prototype.loadNext = function (block) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var fr = new FileReader();
+                fr.onload = function () { return __awaiter(_this, void 0, void 0, function () {
+                    var sha1;
+                    return __generator(this, function (_a) {
+                        if (fr.result) {
+                            sha1 = crypto.subtle.digest('SHA-1', fr.result);
+                            resolve(sha1);
+                        }
+                        else {
+                            reject(new Error("Read file error!"));
+                        }
+                        return [2];
+                    });
+                }); };
+                fr.onloadend = function () {
                     fr.onloadend = fr.onload = fr.onerror = null;
                 };
-                fr.onerror = () => {
+                fr.onerror = function () {
                     reject(new Error("Read file error!"));
                 };
                 fr.readAsArrayBuffer(block.blob);
             });
-        }
-        get({ isEmitEvent } = {}, racePromise = new Promise((res) => {
-        })) {
+        };
+        QETagNormal.prototype.get = function (_a, racePromise) {
+            var _this = this;
+            var isEmitEvent = (_a === void 0 ? {} : _a).isEmitEvent;
+            if (racePromise === void 0) { racePromise = new Promise(function (res) {
+            }); }
             if (this.hash) {
                 return Promise.resolve(this.hash);
             }
-            if (!window.crypto.subtle) {
-                const error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
+            if (typeof crypto === 'undefined') {
+                var error = new Error('Crypto API Error: crypto is not support');
                 return Promise.reject(error);
             }
-            const blocks = this.file.getBlocks();
-            const blocksLength = blocks.length;
-            let hashsLength = 0;
+            if (!crypto.subtle) {
+                var error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
+                return Promise.reject(error);
+            }
+            var blocks = this.file.getBlocks();
+            var blocksLength = blocks.length;
+            var hashsLength = 0;
             return Promise.race([
                 racePromise,
                 Promise.all(blocks
-                    .map(throat_1.default().apply(this, [this.concurrency, (block) => {
+                    .map(throat_1.default().apply(this, [this.concurrency, function (block) {
                         return Promise.race([
-                            racePromise.then(() => {
+                            racePromise.then(function () {
                                 throw new Error('Racing interrupted');
                             }),
-                            this.loadNext(block)
-                        ]).then(sha1 => {
+                            _this.loadNext(block)
+                        ]).then(function (sha1) {
                             hashsLength++;
-                            this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
-                            isEmitEvent && this.emit(QETagNormal.Events.UpdateProgress, this.process);
+                            _this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
+                            isEmitEvent && _this.emit(QETagNormal.Events.UpdateProgress, _this.process);
                             return sha1;
                         });
                     }])))
-                    .then((hashs) => __awaiter(this, void 0, void 0, function* () {
-                    let perfex = Math.log2(this.file.blockSize);
-                    const isSmallFile = hashs.length === 1;
-                    let hash = null;
-                    if (isSmallFile) {
-                        hash = hashs[0];
-                    }
-                    else {
-                        perfex = 0x80 | perfex;
-                        hash = hashs.reduce((a, b) => utils_4.concatBuffer(a, b));
-                        hash = yield window.crypto.subtle.digest('SHA-1', hash);
-                    }
-                    const byte = new ArrayBuffer(1);
-                    const dv = new DataView(byte);
-                    dv.setUint8(0, perfex);
-                    hash = utils_4.concatBuffer(byte, hash);
-                    hash = utils_4.arrayBufferToBase64(hash);
-                    const calcedhash = utils_4.urlSafeBase64(hash) + this.file.size.toString(36);
-                    return calcedhash;
-                }))
+                    .then(function (hashs) { return __awaiter(_this, void 0, void 0, function () {
+                    var perfex, isSmallFile, hash, byte, dv, calcedhash;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                perfex = Math.log2(this.file.blockSize);
+                                isSmallFile = hashs.length === 1;
+                                hash = null;
+                                if (!isSmallFile) return [3, 1];
+                                hash = hashs[0];
+                                return [3, 3];
+                            case 1:
+                                perfex = 0x80 | perfex;
+                                hash = hashs.reduce(function (a, b) { return utils_4.concatBuffer(a, b); });
+                                return [4, crypto.subtle.digest('SHA-1', hash)];
+                            case 2:
+                                hash = _a.sent();
+                                _a.label = 3;
+                            case 3:
+                                byte = new ArrayBuffer(1);
+                                dv = new DataView(byte);
+                                dv.setUint8(0, perfex);
+                                hash = utils_4.concatBuffer(byte, hash);
+                                hash = utils_4.arrayBufferToBase64(hash);
+                                calcedhash = utils_4.urlSafeBase64(hash) + this.file.size.toString(36);
+                                return [2, calcedhash];
+                        }
+                    });
+                }); })
             ])
-                .then(res => {
-                this.hash = res;
+                .then(function (res) {
+                _this.hash = res;
                 return res;
             });
-        }
-    }
+        };
+        return QETagNormal;
+    }(base_4.default));
     exports.default = QETagNormal;
 });
 define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], function (require, exports, base_5, utils_5) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     base_5 = __importDefault(base_5);
-    class QETagWorker extends base_5.default {
-        constructor(file, opts) {
-            super(file);
-            this.workers = opts.workers;
-            this.channel = utils_5.guid();
+    var QETagWorker = (function (_super) {
+        __extends(QETagWorker, _super);
+        function QETagWorker(file, opts) {
+            var _this = _super.call(this, file) || this;
+            _this.workers = opts.workers;
+            _this.channel = utils_5.guid();
+            return _this;
         }
-        get({ isTransferSupported, isEmitEvent } = {}, racePromise = new Promise((res) => {
-        })) {
+        QETagWorker.prototype.get = function (_a, racePromise) {
+            var _this = this;
+            var _b = _a === void 0 ? {} : _a, isTransferSupported = _b.isTransferSupported, isEmitEvent = _b.isEmitEvent;
+            if (racePromise === void 0) { racePromise = new Promise(function (res) {
+            }); }
             if (this.hash) {
                 return Promise.resolve(this.hash);
             }
-            if (!window.crypto.subtle) {
-                const error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
+            if (typeof crypto === 'undefined') {
+                var error = new Error('Crypto API Error: crypto is not support');
+                return Promise.reject(error);
+            }
+            if (!crypto.subtle) {
+                var error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
                 return Promise.reject(error);
             }
             this.workers.removeMessagesByChannel(this.channel);
             this.workers.removeAllListeners(this.channel);
             return Promise.race([
                 racePromise,
-                new Promise((resolve, reject) => {
-                    const blocks = this.file.getBlocks();
-                    const blocksLength = blocks.length;
-                    const hashs = [];
-                    let hashsLength = 0;
-                    this.workers.on(this.channel, (payload) => __awaiter(this, void 0, void 0, function* () {
-                        if (payload.type === 'error') {
-                            this.workers.removeAllListeners(this.channel);
-                            reject(new Error(payload.data));
-                        }
-                        hashs[payload.data.index] = payload.data.sha1;
-                        hashsLength++;
-                        this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
-                        isEmitEvent && this.emit(QETagWorker.Events.UpdateProgress, this.process);
-                        if (hashsLength === blocksLength) {
-                            let perfex = Math.log2(this.file.blockSize);
-                            const isSmallFile = hashsLength === 1;
-                            let result = null;
-                            if (isSmallFile) {
-                                result = hashs[0];
+                new Promise(function (resolve, reject) {
+                    var blocks = _this.file.getBlocks();
+                    var blocksLength = blocks.length;
+                    var hashs = [];
+                    var hashsLength = 0;
+                    _this.workers.on(_this.channel, function (payload) { return __awaiter(_this, void 0, void 0, function () {
+                        var perfex, isSmallFile, result, byte, dv, calcedhash;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    if (payload.type === 'error') {
+                                        this.workers.removeAllListeners(this.channel);
+                                        reject(new Error(payload.data));
+                                    }
+                                    hashs[payload.data.index] = payload.data.sha1;
+                                    hashsLength++;
+                                    this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
+                                    isEmitEvent && this.emit(QETagWorker.Events.UpdateProgress, this.process);
+                                    if (!(hashsLength === blocksLength)) return [3, 4];
+                                    perfex = Math.log2(this.file.blockSize);
+                                    isSmallFile = hashsLength === 1;
+                                    result = null;
+                                    if (!isSmallFile) return [3, 1];
+                                    result = hashs[0];
+                                    return [3, 3];
+                                case 1:
+                                    perfex = 0x80 | perfex;
+                                    result = hashs.reduce(function (a, b) { return utils_5.concatBuffer(a, b); });
+                                    return [4, crypto.subtle.digest('SHA-1', result)];
+                                case 2:
+                                    result = _a.sent();
+                                    _a.label = 3;
+                                case 3:
+                                    byte = new ArrayBuffer(1);
+                                    dv = new DataView(byte);
+                                    dv.setUint8(0, perfex);
+                                    result = utils_5.concatBuffer(byte, result);
+                                    result = utils_5.arrayBufferToBase64(result);
+                                    calcedhash = utils_5.urlSafeBase64(result) + this.file.size.toString(36);
+                                    this.workers.removeAllListeners(this.channel);
+                                    resolve(calcedhash);
+                                    _a.label = 4;
+                                case 4: return [2];
                             }
-                            else {
-                                perfex = 0x80 | perfex;
-                                result = hashs.reduce((a, b) => utils_5.concatBuffer(a, b));
-                                result = yield window.crypto.subtle.digest('SHA-1', result);
-                            }
-                            const byte = new ArrayBuffer(1);
-                            const dv = new DataView(byte);
-                            dv.setUint8(0, perfex);
-                            result = utils_5.concatBuffer(byte, result);
-                            result = utils_5.arrayBufferToBase64(result);
-                            const calcedhash = utils_5.urlSafeBase64(result) + this.file.size.toString(36);
-                            this.workers.removeAllListeners(this.channel);
-                            resolve(calcedhash);
-                        }
-                    }));
-                    blocks.forEach((block) => {
-                        const opts = isTransferSupported ? {
+                        });
+                    }); });
+                    blocks.forEach(function (block) {
+                        var opts = isTransferSupported ? {
                             transfer: [block.blob]
                         } : undefined;
-                        this.workers.send({
-                            channel: this.channel,
+                        _this.workers.send({
+                            channel: _this.channel,
                             payload: {
                                 blob: block.blob,
                                 index: block.index,
@@ -790,15 +952,16 @@ define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], funct
                     });
                 })
             ])
-                .then(res => {
+                .then(function (res) {
                 if (res === 'race-to-stop') {
-                    this.workers.removeMessagesByChannel(this.channel);
+                    _this.workers.removeMessagesByChannel(_this.channel);
                 }
-                this.hash = res;
+                _this.hash = res;
                 return res;
             });
-        }
-    }
+        };
+        return QETagWorker;
+    }(base_5.default));
     exports.default = QETagWorker;
 });
 define("qetag/index", ["require", "exports", "qetag/base", "qetag/normal", "qetag/worker"], function (require, exports, base_6, normal_1, worker_1) {
@@ -816,34 +979,37 @@ define("qetag/index", ["require", "exports", "qetag/base", "qetag/normal", "qeta
 define("worker/index", ["require", "exports", "events"], function (require, exports, events_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class WorkerProvider extends events_3.EventEmitter {
-        constructor(workerPath, taskConcurrency = 1) {
-            super();
-            this.workers = [];
-            this.messages = [];
-            this.cpus = window.navigator.hardwareConcurrency || 1;
-            this.taskConcurrency = taskConcurrency;
-            for (let i = 0; i < this.cpus; i++) {
-                const worker = {
+    var WorkerProvider = (function (_super) {
+        __extends(WorkerProvider, _super);
+        function WorkerProvider(workerPath, taskConcurrency) {
+            if (taskConcurrency === void 0) { taskConcurrency = 1; }
+            var _this = _super.call(this) || this;
+            _this.workers = [];
+            _this.messages = [];
+            _this.cpus = window.navigator.hardwareConcurrency || 1;
+            _this.taskConcurrency = taskConcurrency;
+            for (var i = 0; i < _this.cpus; i++) {
+                var worker = {
                     buzy: false,
                     instance: new Worker(workerPath),
                     tasks: 0
                 };
-                this.workers.push(worker);
+                _this.workers.push(worker);
             }
-            for (let i = 0; i < this.cpus; i++) {
-                this.workers[i].instance.onmessage = this.onmessage.bind(this);
+            for (var i = 0; i < _this.cpus; i++) {
+                _this.workers[i].instance.onmessage = _this.onmessage.bind(_this);
             }
+            return _this;
         }
-        static isTransferablesSupported() {
-            return (() => {
-                const buffer = new ArrayBuffer(1);
+        WorkerProvider.isTransferablesSupported = function () {
+            return (function () {
+                var buffer = new ArrayBuffer(1);
                 try {
-                    const blob = new Blob([""], {
+                    var blob = new Blob([""], {
                         type: "text/javascript",
                     });
-                    const urlObj = URL.createObjectURL(blob);
-                    const worker = new Worker(urlObj);
+                    var urlObj = URL.createObjectURL(blob);
+                    var worker = new Worker(urlObj);
                     worker.postMessage(buffer, [
                         buffer,
                     ]);
@@ -853,65 +1019,38 @@ define("worker/index", ["require", "exports", "events"], function (require, expo
                 }
                 return !Boolean(buffer.byteLength);
             })();
-        }
-        static asyncFnMover(fn) {
-            const blob = new Blob([`
-            $$=${fn.toString()};
-            onmessage=function (e) {
-                $$(e.data)
-                    .then(function (res) {
-                        var payload = {
-                            data: res,
-                            type: 'data'
-                        };
-                        postMessage({
-                            channel: e.data.channel,
-                            payload: payload
-                        });
-                    })
-                    .catch(function (res) {
-                        postMessage({
-                            channel: e.data.channel,
-                            payload: {
-                                type: 'error',
-                                data: {
-                                    message: res.message,
-                                    stack: res.stack
-                                }
-                            }
-                        });
-                    })
-            };
-        `], {
+        };
+        WorkerProvider.asyncFnMover = function (fn) {
+            var blob = new Blob(["\n            $$=" + fn.toString() + ";\n            onmessage=function (e) {\n                $$(e.data)\n                    .then(function (res) {\n                        var payload = {\n                            data: res,\n                            type: 'data'\n                        };\n                        postMessage({\n                            channel: e.data.channel,\n                            payload: payload\n                        });\n                    })\n                    .catch(function (res) {\n                        postMessage({\n                            channel: e.data.channel,\n                            payload: {\n                                type: 'error',\n                                data: {\n                                    message: res.message,\n                                    stack: res.stack\n                                }\n                            }\n                        });\n                    })\n            };\n        "], {
                 type: "text/javascript",
             });
             return URL.createObjectURL(blob);
-        }
-        onmessage(e) {
-            for (let i = 0; i < this.cpus; i++) {
-                const worker = this.workers[i];
+        };
+        WorkerProvider.prototype.onmessage = function (e) {
+            for (var i = 0; i < this.cpus; i++) {
+                var worker = this.workers[i];
                 if (e.target === worker.instance) {
                     worker.buzy = false;
                     worker.tasks--;
                     this.run();
                 }
             }
-            const { channel, payload } = e.data;
+            var _a = e.data, channel = _a.channel, payload = _a.payload;
             if (payload.type === 'error') {
-                const err = new Error(payload.data.message);
+                var err = new Error(payload.data.message);
                 err.stack = payload.data.stack;
                 payload.data = err;
             }
             this.emit(channel, payload);
-        }
-        run() {
-            const idles = this.workers.filter((worker) => !worker.buzy);
-            for (let i = this.messages.length - 1; i >= 0; i--) {
-                const idleWorker = idles.pop();
+        };
+        WorkerProvider.prototype.run = function () {
+            var idles = this.workers.filter(function (worker) { return !worker.buzy; });
+            for (var i = this.messages.length - 1; i >= 0; i--) {
+                var idleWorker = idles.pop();
                 if (!idleWorker) {
                     break;
                 }
-                const message = this.messages.pop();
+                var message = this.messages.pop();
                 if (!message) {
                     break;
                 }
@@ -921,36 +1060,36 @@ define("worker/index", ["require", "exports", "events"], function (require, expo
                 }
                 idleWorker.instance.postMessage.apply(idleWorker.instance, message);
             }
-        }
-        send(message, options) {
+        };
+        WorkerProvider.prototype.send = function (message, options) {
             this.messages.push([message, options]);
             this.run();
-        }
-        destroy() {
-            this.workers.forEach((worker) => {
+        };
+        WorkerProvider.prototype.destroy = function () {
+            this.workers.forEach(function (worker) {
                 worker.instance.terminate();
             });
             this.workers = [];
             this.messages = [];
             this.removeAllListeners();
-        }
-        removeMessage(message) {
+        };
+        WorkerProvider.prototype.removeMessage = function (message) {
             if (this.messages) {
-                for (let index = 0; index < this.messages.length; index++) {
-                    const element = this.messages[index][0];
+                for (var index = 0; index < this.messages.length; index++) {
+                    var element = this.messages[index][0];
                     if (element === message) {
                         this.messages.splice(index, 1);
                         break;
                     }
                 }
             }
-        }
-        removeMessagesByChannel(channel) {
+        };
+        WorkerProvider.prototype.removeMessagesByChannel = function (channel) {
             if (this.messages) {
-                let index = 0;
-                let element = this.messages[index];
+                var index = 0;
+                var element = this.messages[index];
                 while (element) {
-                    const message = element[0];
+                    var message = element[0];
                     if (message.channel === channel) {
                         this.messages.splice(index, 1);
                     }
@@ -960,8 +1099,9 @@ define("worker/index", ["require", "exports", "events"], function (require, expo
                     element = this.messages[index];
                 }
             }
-        }
-    }
+        };
+        return WorkerProvider;
+    }(events_3.EventEmitter));
     exports.default = WorkerProvider;
 });
 define("qetag/worker-script", ["require", "exports"], function (require, exports) {
@@ -969,11 +1109,11 @@ define("qetag/worker-script", ["require", "exports"], function (require, exports
     Object.defineProperty(exports, "__esModule", { value: true });
     function handler(data) {
         return new Promise(function (resolve, reject) {
-            const payload = data.payload;
+            var payload = data.payload;
             if (typeof FileReader === "undefined") {
                 reject(new Error('FileReaderAPI not support in WebWorkers'));
             }
-            const fr = new FileReader();
+            var fr = new FileReader();
             fr.onload = function () {
                 if (fr.result) {
                     if (typeof crypto === 'undefined') {
@@ -983,7 +1123,7 @@ define("qetag/worker-script", ["require", "exports"], function (require, exports
                         reject(new Error('Crypto.Subtle Api not support in WebWorkers'));
                     }
                     crypto.subtle.digest('SHA-1', fr.result)
-                        .then(sha1 => {
+                        .then(function (sha1) {
                         resolve({
                             sha1: sha1,
                             index: payload.index
@@ -1003,8 +1143,8 @@ define("http/worker-script", ["require", "exports"], function (require, exports)
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function handler(data) {
-        const payload = data.payload;
-        const isBlob = Object.prototype.toString.call(payload.data) === '[object Blob]';
+        var payload = data.payload;
+        var isBlob = Object.prototype.toString.call(payload.data) === '[object Blob]';
         return fetch(payload.url, {
             body: payload.data,
             method: 'POST',
@@ -1015,8 +1155,8 @@ define("http/worker-script", ["require", "exports"], function (require, exports)
                     ? payload.config.headers
                     : {}
                 : {}
-        }).then(response => response.json())
-            .then(response => {
+        }).then(function (response) { return response.json(); })
+            .then(function (response) {
             if (isBlob) {
                 postMessage({
                     channel: data.channel,
@@ -1046,54 +1186,64 @@ define("http/index", ["require", "exports", "http/xhr", "http/worker", "http/bas
 define("core/ctx", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class Ctx {
-        constructor() {
+    var Ctx = (function () {
+        function Ctx() {
             this.ctx = {
                 length: 0
             };
         }
-        get size() {
-            return Object.keys(this.ctx)
-                .map(index => {
-                const ctx = this.ctx[index];
-                if (ctx && ctx.length) {
-                    return ctx.length;
-                }
-                return 0;
-            }).reduce((a, b) => a + b, 0);
-        }
-        get length() {
-            return this.ctx.length;
-        }
-        remove(index) {
+        Object.defineProperty(Ctx.prototype, "size", {
+            get: function () {
+                var _this = this;
+                return Object.keys(this.ctx)
+                    .map(function (index) {
+                    var ctx = _this.ctx[index];
+                    if (ctx && ctx.length) {
+                        return ctx.length;
+                    }
+                    return 0;
+                }).reduce(function (a, b) { return a + b; }, 0);
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Object.defineProperty(Ctx.prototype, "length", {
+            get: function () {
+                return this.ctx.length;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        Ctx.prototype.remove = function (index) {
             if (this.ctx[index]) {
                 delete this.ctx[index];
                 this.ctx.length -= 1;
             }
-        }
-        add(ctx, chunk) {
+        };
+        Ctx.prototype.add = function (ctx, chunk) {
             if (chunk.index === 0) {
                 this.ctx[chunk.block.index] = [];
                 this.ctx.length += 1;
             }
             this.ctx[chunk.block.index][chunk.index] = ctx;
-        }
-        toArray() {
+        };
+        Ctx.prototype.toArray = function () {
             return Array.from(this.ctx);
-        }
-        clearArray() {
-            return this.toArray().filter(i => i);
-        }
-        selfEqual() {
+        };
+        Ctx.prototype.clearArray = function () {
+            return this.toArray().filter(function (i) { return i; });
+        };
+        Ctx.prototype.selfEqual = function () {
             return this.clearArray().length === this.ctx.length;
-        }
-        toCtxString() {
-            return this.clearArray().map(ctx => ctx[ctx.length - 1]).toString();
-        }
-        stringify() {
+        };
+        Ctx.prototype.toCtxString = function () {
+            return this.clearArray().map(function (ctx) { return ctx[ctx.length - 1]; }).toString();
+        };
+        Ctx.prototype.stringify = function () {
             return JSON.stringify(this.ctx);
-        }
-    }
+        };
+        return Ctx;
+    }());
     exports.default = Ctx;
 });
 define("service", ["require", "exports", "core/status", "qetag/index", "worker/index", "qetag/worker-script", "http/worker-script", "core/file", "http/index", "core/utils", "constants/status", "core/ctx", "third-parts/merge"], function (require, exports, status_3, index_1, index_2, worker_script_1, worker_script_2, file_1, index_3, utils_6, status_4, ctx_1, merge_2) {
@@ -1107,20 +1257,23 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
     file_1 = __importDefault(file_1);
     index_3 = __importDefault(index_3);
     ctx_1 = __importDefault(ctx_1);
-    let qetagWorkers;
-    let uploaderWorkers;
-    class Service extends status_3.default {
-        constructor(file, fileProps = {}, config = {}) {
-            super();
-            this.progress = 0;
-            this.hashCalcProgress = 0;
-            this.lastProgress = {
+    var qetagWorkers;
+    var uploaderWorkers;
+    var Service = (function (_super) {
+        __extends(Service, _super);
+        function Service(file, fileProps, config) {
+            if (fileProps === void 0) { fileProps = {}; }
+            if (config === void 0) { config = {}; }
+            var _this = _super.call(this) || this;
+            _this.progress = 0;
+            _this.hashCalcProgress = 0;
+            _this.lastProgress = {
                 time: null,
                 size: 0
             };
-            this.rate = '0KB/S';
-            this.bytesPreSecond = 0;
-            this.tokenInfo = {
+            _this.rate = '0KB/S';
+            _this.bytesPreSecond = 0;
+            _this.tokenInfo = {
                 uploadToken: "",
                 createInfo: {},
                 type: "",
@@ -1129,46 +1282,48 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                 partUploadUrl: "https://upload-v1.6pan.cn",
                 directUploadUrl: "https://upload-v1.6pan.cn/file/upload"
             };
-            this.file = new file_1.default({
-                file,
+            _this.file = new file_1.default({
+                file: file,
                 blockSize: Service.default.blockSize,
                 chunkSize: Service.default.chunkSize
             });
-            this.props = fileProps;
+            _this.props = fileProps;
             if (config.adapter) {
                 if (!(config.adapter in index_1.default)) {
                     delete config.adapter;
                 }
             }
-            this.config = Object.assign({
+            _this.config = Object.assign({
                 adapter: 'Normal',
                 onStatusChange: function () { }
             }, config);
-            this.sizeStr = utils_6.sizeToStr(this.file.size);
-            this.ctx = new ctx_1.default();
-            this._setStatusHandler();
+            _this.sizeStr = utils_6.sizeToStr(_this.file.size);
+            _this.ctx = new ctx_1.default();
+            _this._setStatusHandler();
+            return _this;
         }
-        isExisted() {
+        Service.prototype.isExisted = function () {
             if (this.normalFile) {
                 return true;
             }
             return false;
-        }
-        setFileInfo(info) {
+        };
+        Service.prototype.setFileInfo = function (info) {
             if (info.created) {
                 this.setNormalFile(info.createInfo);
             }
             else {
                 this.tokenInfo = info;
             }
-        }
-        isUploadInfoExist() {
+        };
+        Service.prototype.isUploadInfoExist = function () {
             return Boolean(this.normalFile) || Boolean(this.tokenInfo.uploadToken);
-        }
-        setNormalFile(file) {
+        };
+        Service.prototype.setNormalFile = function (file) {
             this.normalFile = file;
-        }
-        _qetag() {
+        };
+        Service.prototype._qetag = function () {
+            var _this = this;
             if (!this.qetag) {
                 if (!qetagWorkers && this.config.adapter === 'Worker') {
                     qetagWorkers = new index_2.default(index_2.default.asyncFnMover(worker_script_1.default), Service.default.taskConcurrencyInWorkers);
@@ -1176,14 +1331,15 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                 this.qetag = new index_1.default[this.config.adapter](this.file, {
                     workers: qetagWorkers
                 });
-                this.qetag.on(index_1.default.Base.Events.UpdateProgress, (progress) => {
-                    this.hashCalcProgress = progress;
-                    this.config.onStatusChange(this, this.status);
+                this.qetag.on(index_1.default.Base.Events.UpdateProgress, function (progress) {
+                    _this.hashCalcProgress = progress;
+                    _this.config.onStatusChange(_this, _this.status);
                 });
             }
             return this.qetag;
-        }
-        _http() {
+        };
+        Service.prototype._http = function () {
+            var _this = this;
             if (!this.http) {
                 if (!uploaderWorkers && this.config.adapter === 'Worker') {
                     uploaderWorkers = new index_2.default(index_2.default.asyncFnMover(worker_script_2.default), Service.default.taskConcurrencyInWorkers);
@@ -1191,19 +1347,19 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                 this.http = new index_3.default[this.config.adapter]({
                     workers: uploaderWorkers
                 });
-                const throttle = utils_6.createThrottle(1000);
-                this.http.on(index_3.default.Base.Events.UpdateProgress, () => {
-                    throttle(() => {
-                        this.setProgress();
+                var throttle_1 = utils_6.createThrottle(1000);
+                this.http.on(index_3.default.Base.Events.UpdateProgress, function () {
+                    throttle_1(function () {
+                        _this.setProgress();
                     });
                 });
             }
             return this.http;
-        }
-        setProgress() {
-            const now = new Date().getTime();
-            const { chunkSize } = Service.default;
-            const bytesUploaded = this.ctx.size * chunkSize;
+        };
+        Service.prototype.setProgress = function () {
+            var now = new Date().getTime();
+            var chunkSize = Service.default.chunkSize;
+            var bytesUploaded = this.ctx.size * chunkSize;
             if (this.lastProgress.time) {
                 this.bytesPreSecond = Math.floor((bytesUploaded - this.lastProgress.size) / ((now - this.lastProgress.time) / 1000));
                 this.rate = utils_6.sizeToStr(this.bytesPreSecond) + '/S';
@@ -1212,7 +1368,7 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                 time: now,
                 size: bytesUploaded
             };
-            let progress = parseFloat((bytesUploaded * 100 / this.file.size).toFixed(2));
+            var progress = parseFloat((bytesUploaded * 100 / this.file.size).toFixed(2));
             if (progress > 100) {
                 progress = 100;
             }
@@ -1221,43 +1377,44 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                 this.isUploading()) {
                 this.setStatus(status_4.STATUS.UPLOADING);
             }
-        }
-        _setStatusHandler() {
-            const onChange = () => {
-                this.config.onStatusChange(this, this.status);
+        };
+        Service.prototype._setStatusHandler = function () {
+            var _this = this;
+            var onChange = function () {
+                _this.config.onStatusChange(_this, _this.status);
             };
             this.addStatusHandler(status_4.STATUS.CALCULATING, onChange)
-                .addStatusHandler(status_4.STATUS.CANCEL, () => {
+                .addStatusHandler(status_4.STATUS.CANCEL, function () {
                 var _a, _b, _c;
-                (_a = this.http) === null || _a === void 0 ? void 0 : _a.removeAllListeners();
-                (_b = this.qetag) === null || _b === void 0 ? void 0 : _b.emit('race-to-stop');
-                (_c = this.qetag) === null || _c === void 0 ? void 0 : _c.removeAllListeners();
+                (_a = _this.http) === null || _a === void 0 ? void 0 : _a.removeAllListeners();
+                (_b = _this.qetag) === null || _b === void 0 ? void 0 : _b.emit('race-to-stop');
+                (_c = _this.qetag) === null || _c === void 0 ? void 0 : _c.removeAllListeners();
                 onChange();
             })
-                .addStatusHandler(status_4.STATUS.DONE, () => {
+                .addStatusHandler(status_4.STATUS.DONE, function () {
                 var _a;
-                this.progress = 100;
-                (_a = this.qetag) === null || _a === void 0 ? void 0 : _a.removeAllListeners();
+                _this.progress = 100;
+                (_a = _this.qetag) === null || _a === void 0 ? void 0 : _a.removeAllListeners();
                 onChange();
             })
                 .addStatusHandler(status_4.STATUS.FAILED, onChange)
-                .addStatusHandler(status_4.STATUS.PAUSE, () => {
+                .addStatusHandler(status_4.STATUS.PAUSE, function () {
                 var _a;
-                this.tryCount = 0;
-                (_a = this.qetag) === null || _a === void 0 ? void 0 : _a.emit('race-to-stop');
+                _this.tryCount = 0;
+                (_a = _this.qetag) === null || _a === void 0 ? void 0 : _a.emit('race-to-stop');
                 onChange();
             })
-                .addStatusHandler(status_4.STATUS.PENDING, () => {
-                this.tryCount = 0;
+                .addStatusHandler(status_4.STATUS.PENDING, function () {
+                _this.tryCount = 0;
                 onChange();
             })
                 .addStatusHandler(status_4.STATUS.PREPARING, onChange)
                 .addStatusHandler(status_4.STATUS.UPLOADING, onChange);
-        }
-        chunkUpload(chunk, ctx) {
-            const http = this._http();
-            const { clientConfig, apis } = Service.default;
-            const config = {
+        };
+        Service.prototype.chunkUpload = function (chunk, ctx) {
+            var http = this._http();
+            var _a = Service.default, clientConfig = _a.clientConfig, apis = _a.apis;
+            var config = {
                 url: '',
                 data: chunk.blob,
                 credentials: 'omit',
@@ -1271,20 +1428,20 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                 })
             };
             if (chunk.index === 0) {
-                config.url = `${apis.mkblk}${chunk.block.size}/${chunk.block.index}`;
+                config.url = "" + apis.mkblk + chunk.block.size + "/" + chunk.block.index;
             }
             else {
-                config.url = `${apis.bput}${ctx}/${chunk.startByte}`;
+                config.url = "" + apis.bput + ctx + "/" + chunk.startByte;
             }
             config.url = this.tokenInfo.partUploadUrl + config.url;
             return http.post(config, {
                 isTransferablesSupported: index_2.default.isTransferablesSupported(),
                 isEmitEvent: true
             });
-        }
-        createFile() {
-            const http = this._http();
-            const { clientConfig, apis } = Service.default;
+        };
+        Service.prototype.createFile = function () {
+            var http = this._http();
+            var _a = Service.default, clientConfig = _a.clientConfig, apis = _a.apis;
             return http.post({
                 url: this.tokenInfo.partUploadUrl + apis.mkfile + this.file.size,
                 data: this.ctx.toCtxString(),
@@ -1298,9 +1455,9 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                     }
                 })
             });
-        }
-        getHash(raceFunction) {
-            const qetag = this._qetag();
+        };
+        Service.prototype.getHash = function (raceFunction) {
+            var qetag = this._qetag();
             if (qetag.isExist()) {
                 return Promise.resolve(qetag.getSync());
             }
@@ -1308,56 +1465,66 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                 isTransferablesSupported: index_2.default.isTransferablesSupported(),
                 isEmitEvent: true
             }, raceFunction);
-        }
-        getHashSync() {
-            const qetag = this._qetag();
+        };
+        Service.prototype.getHashSync = function () {
+            var qetag = this._qetag();
             return qetag.getSync();
-        }
-        setHash(hash) {
-            const qetag = this._qetag();
+        };
+        Service.prototype.setHash = function (hash) {
+            var qetag = this._qetag();
             qetag.set(hash);
-        }
-        _getDefaultRequestHeader() {
-            const { AuthorizationTokenKey, AuthorizationStorageKey } = Service.default;
-            const token = localStorage.getItem(AuthorizationStorageKey);
+        };
+        Service.prototype._getDefaultRequestHeader = function () {
+            var _a;
+            var _b = Service.default, AuthorizationTokenKey = _b.AuthorizationTokenKey, AuthorizationStorageKey = _b.AuthorizationStorageKey;
+            var token = localStorage.getItem(AuthorizationStorageKey);
             if (token) {
                 return {
-                    headers: {
-                        [AuthorizationTokenKey]: token
-                    }
+                    headers: (_a = {},
+                        _a[AuthorizationTokenKey] = token,
+                        _a)
                 };
             }
             return {};
-        }
-        getTokenInfo() {
-            return __awaiter(this, void 0, void 0, function* () {
-                const http = this._http();
-                const params = {
-                    hash: this.getHashSync(),
-                    name: this.file.name,
-                    op: this.props.op || 0
-                };
-                if (this.props.path) {
-                    params.path = this.props.path;
-                }
-                if (this.props.parent) {
-                    params.parent = this.props.parent;
-                }
-                const result = yield http.post({
-                    url: Service.default.clientConfig.baseURL + Service.default.apis.token,
-                    data: JSON.stringify(params),
-                    credentials: 'include',
-                    config: merge_2.merge({}, Service.default.clientConfig, this._getDefaultRequestHeader())
-                }).then(json => {
-                    if (json.success === false) {
-                        throw new Error(json.message);
+        };
+        Service.prototype.getTokenInfo = function () {
+            return __awaiter(this, void 0, void 0, function () {
+                var http, params, result;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            http = this._http();
+                            params = {
+                                hash: this.getHashSync(),
+                                name: this.file.name,
+                                op: this.props.op || 0
+                            };
+                            if (this.props.path) {
+                                params.path = this.props.path;
+                            }
+                            if (this.props.parent) {
+                                params.parent = this.props.parent;
+                            }
+                            return [4, http.post({
+                                    url: Service.default.clientConfig.baseURL + Service.default.apis.token,
+                                    data: JSON.stringify(params),
+                                    credentials: 'include',
+                                    config: merge_2.merge({}, Service.default.clientConfig, this._getDefaultRequestHeader())
+                                }).then(function (json) {
+                                    if (json.success === false) {
+                                        throw new Error(json.message);
+                                    }
+                                    return json;
+                                })];
+                        case 1:
+                            result = _a.sent();
+                            return [2, result];
                     }
-                    return json;
                 });
-                return result;
             });
-        }
-    }
+        };
+        return Service;
+    }(status_3.default));
     exports.default = Service;
 });
 define("index", ["require", "exports", "constants/status", "service", "constants/status"], function (require, exports, status_5, service_1, status_6) {
@@ -1368,19 +1535,23 @@ define("index", ["require", "exports", "constants/status", "service", "constants
     Object.defineProperty(exports, "STATUS", { enumerable: true, get: function () { return status_6.STATUS; } });
     Object.defineProperty(exports, "TASK_STATUS_INFO", { enumerable: true, get: function () { return status_6.TASK_STATUS_INFO; } });
     Object.defineProperty(exports, "UPLOADING_STATUS", { enumerable: true, get: function () { return status_6.UPLOADING_STATUS; } });
-    class WebFile extends service_1.default {
-        constructor(file, fileProps = {}, config = {}) {
-            super(file, fileProps, config);
-            this.pos = [];
+    var WebFile = (function (_super) {
+        __extends(WebFile, _super);
+        function WebFile(file, fileProps, config) {
+            if (fileProps === void 0) { fileProps = {}; }
+            if (config === void 0) { config = {}; }
+            var _this = _super.call(this, file, fileProps, config) || this;
+            _this.pos = [];
+            return _this;
         }
-        pause() {
+        WebFile.prototype.pause = function () {
             if (this.isUploading()) {
                 this.setStatus(status_5.STATUS.PAUSE);
                 return Promise.resolve();
             }
-            return Promise.reject(new Error(`Warning: Non-uploading`));
-        }
-        resume() {
+            return Promise.reject(new Error("Warning: Non-uploading"));
+        };
+        WebFile.prototype.resume = function () {
             if (this.isFailed()) {
                 this.restTryCount();
                 return this.upload();
@@ -1389,108 +1560,137 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                 return this.upload();
             }
             if (this.isCancel()) {
-                return Promise.reject(new Error(`Error: Uploader destoryed`));
+                return Promise.reject(new Error("Error: Uploader destoryed"));
             }
-            return Promise.reject(new Error(`Warning: Uploading`));
-        }
-        cancel() {
+            return Promise.reject(new Error("Warning: Uploading"));
+        };
+        WebFile.prototype.cancel = function () {
             this.setStatus(status_5.STATUS.CANCEL);
             return Promise.resolve();
-        }
-        upload() {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (this.isUploading()) {
-                    throw new Error(`Warning: Uploading`);
-                }
-                try {
-                    this.setStatus(status_5.STATUS.CALCULATING);
-                    const qetag = this._qetag();
-                    qetag.removeAllListeners('race-to-stop');
-                    let resolveRefs;
-                    qetag.on('race-to-stop', () => {
-                        resolveRefs && resolveRefs('race-to-stop');
-                    });
-                    yield this.getHash(new Promise((resolve) => {
-                        resolveRefs = resolve;
-                    }));
-                    if (qetag.getSync() === 'race-to-stop') {
-                        qetag.set('');
-                        return;
+        };
+        WebFile.prototype.upload = function () {
+            return __awaiter(this, void 0, void 0, function () {
+                var qetag, resolveRefs_1, result, e_1;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            if (this.isUploading()) {
+                                throw new Error("Warning: Uploading");
+                            }
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 5, , 6]);
+                            this.setStatus(status_5.STATUS.CALCULATING);
+                            qetag = this._qetag();
+                            qetag.removeAllListeners('race-to-stop');
+                            qetag.on('race-to-stop', function () {
+                                resolveRefs_1 && resolveRefs_1('race-to-stop');
+                            });
+                            return [4, this.getHash(new Promise(function (resolve) {
+                                    resolveRefs_1 = resolve;
+                                }))];
+                        case 2:
+                            _a.sent();
+                            if (qetag.getSync() === 'race-to-stop') {
+                                qetag.set('');
+                                return [2];
+                            }
+                            this.setStatus(status_5.STATUS.PREPARING);
+                            if (!!this.isUploadInfoExist()) return [3, 4];
+                            return [4, this.getTokenInfo()];
+                        case 3:
+                            result = _a.sent();
+                            this.setFileInfo(result);
+                            _a.label = 4;
+                        case 4:
+                            if (this.isExisted()) {
+                                this.setStatus(status_5.STATUS.DONE);
+                                return [2];
+                            }
+                            if (this.isCancel()) {
+                                throw new Error("Warning: Cancel upload");
+                            }
+                            this.setStatus(status_5.STATUS.UPLOADING);
+                            this.start();
+                            return [3, 6];
+                        case 5:
+                            e_1 = _a.sent();
+                            this.recordError(e_1);
+                            this.setStatus(status_5.STATUS.FAILED);
+                            return [3, 6];
+                        case 6: return [2];
                     }
-                    this.setStatus(status_5.STATUS.PREPARING);
-                    if (!this.isUploadInfoExist()) {
-                        const result = yield this.getTokenInfo();
-                        this.setFileInfo(result);
-                    }
-                    if (this.isExisted()) {
-                        this.setStatus(status_5.STATUS.DONE);
-                        return;
-                    }
-                    if (this.isCancel()) {
-                        throw new Error(`Warning: Cancel upload`);
-                    }
-                    this.setStatus(status_5.STATUS.UPLOADING);
-                    this.start();
-                }
-                catch (e) {
-                    this.recordError(e);
-                    this.setStatus(status_5.STATUS.FAILED);
-                }
+                });
             });
-        }
-        start() {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (this.isDone()) {
-                    return;
-                }
-                if (this.isPaused()) {
-                    return;
-                }
-                try {
-                    if (this.isCancel()) {
-                        throw new Error(`Warning: Cancel upload`);
+        };
+        WebFile.prototype.start = function () {
+            return __awaiter(this, void 0, void 0, function () {
+                var data, res, e_2;
+                var _this = this;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            if (this.isDone()) {
+                                return [2];
+                            }
+                            if (this.isPaused()) {
+                                return [2];
+                            }
+                            try {
+                                if (this.isCancel()) {
+                                    throw new Error("Warning: Cancel upload");
+                                }
+                                if (this.isTryout()) {
+                                    throw new Error("Warning: Upload Tryout");
+                                }
+                            }
+                            catch (e) {
+                                this.recordError(e);
+                                this.setStatus(status_5.STATUS.FAILED);
+                                return [2];
+                            }
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 4, , 5]);
+                            if (!(this.ctx.size === this.file.getChunksSize())) return [3, 3];
+                            return [4, this.createFile()];
+                        case 2:
+                            data = _a.sent();
+                            if (this.isDone()) {
+                                return [2];
+                            }
+                            if (data.code) {
+                                throw new Error("Create: " + data.message);
+                            }
+                            res = JSON.parse(data.response);
+                            if (res.hash !== this.getHashSync()) {
+                                throw new Error("Warning: File check failed");
+                            }
+                            this.setNormalFile(res);
+                            this.setStatus(status_5.STATUS.DONE);
+                            return [2];
+                        case 3:
+                            this.setPos();
+                            this.pos.filter(function (p) { return p.status === status_5.STATUS.PENDING; }).map(function (v) {
+                                v.status = status_5.STATUS.UPLOADING;
+                                _this.blockStart(v);
+                            });
+                            return [3, 5];
+                        case 4:
+                            e_2 = _a.sent();
+                            this.recordError(e_2);
+                            this.markTry();
+                            this.start();
+                            return [2];
+                        case 5: return [2];
                     }
-                    if (this.isTryout()) {
-                        throw new Error(`Warning: Upload Tryout`);
-                    }
-                }
-                catch (e) {
-                    this.recordError(e);
-                    this.setStatus(status_5.STATUS.FAILED);
-                    return;
-                }
-                try {
-                    if (this.ctx.size === this.file.getChunksSize()) {
-                        const data = yield this.createFile();
-                        if (data.code) {
-                            throw new Error(`Create: ${data.message}`);
-                        }
-                        const res = JSON.parse(data.response);
-                        if (res.hash !== this.getHashSync()) {
-                            throw new Error(`Warning: File check failed`);
-                        }
-                        this.setNormalFile(res);
-                        this.setStatus(status_5.STATUS.DONE);
-                        return;
-                    }
-                    this.setPos();
-                    this.pos.filter(p => p.status === status_5.STATUS.PENDING).map(v => {
-                        v.status = status_5.STATUS.UPLOADING;
-                        this.blockStart(v);
-                    });
-                }
-                catch (e) {
-                    this.recordError(e);
-                    this.markTry();
-                    this.start();
-                    return;
-                }
+                });
             });
-        }
-        setPos() {
-            let pos = Math.max.apply(null, this.pos.length ? this.pos.map(p => p.index) : [-1]);
-            this.pos = this.pos.filter((pos) => pos.status !== status_5.STATUS.DONE);
-            let len = WebFile.default.concurrency - this.pos.length;
+        };
+        WebFile.prototype.setPos = function () {
+            var pos = Math.max.apply(null, this.pos.length ? this.pos.map(function (p) { return p.index; }) : [-1]);
+            this.pos = this.pos.filter(function (pos) { return pos.status !== status_5.STATUS.DONE; });
+            var len = WebFile.default.concurrency - this.pos.length;
             if (len < 0) {
                 len = 0;
             }
@@ -1504,41 +1704,56 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                 }
                 len--;
             }
-        }
-        _orderTask(chunks) {
-            let promise = Promise.resolve();
-            for (let i = 0; i < chunks.length; i++) {
-                const chunk = chunks[i];
+        };
+        WebFile.prototype._orderTask = function (chunks) {
+            var _this = this;
+            var promise = Promise.resolve();
+            var _loop_1 = function (i) {
+                var chunk = chunks[i];
                 promise = promise
-                    .then((ctx) => this.chunkUpload(chunk, ctx))
-                    .then((res) => {
+                    .then(function (ctx) { return _this.chunkUpload(chunk, ctx); })
+                    .then(function (res) {
                     if (res.code) {
-                        throw new Error(`Chunk: ${res.message}`);
+                        throw new Error("Chunk: " + res.message);
                     }
-                    this.ctx.add(res.ctx, chunk);
+                    _this.ctx.add(res.ctx, chunk);
                     return res.ctx;
                 });
+            };
+            for (var i = 0; i < chunks.length; i++) {
+                _loop_1(i);
             }
             return promise;
-        }
-        blockStart(info) {
-            return __awaiter(this, void 0, void 0, function* () {
-                try {
-                    const block = this.file.getBlockByIndex(info.index);
-                    const chunks = block.getChunks();
-                    yield this._orderTask(chunks);
-                    info.status = status_5.STATUS.DONE;
-                    this.start();
-                }
-                catch (e) {
-                    info.status = status_5.STATUS.PENDING;
-                    this.recordError(e);
-                    this.ctx.remove(info.index);
-                    this.markTry();
-                    this.start();
-                }
+        };
+        WebFile.prototype.blockStart = function (info) {
+            return __awaiter(this, void 0, void 0, function () {
+                var block, chunks, e_3;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            block = this.file.getBlockByIndex(info.index);
+                            chunks = block.getChunks();
+                            return [4, this._orderTask(chunks)];
+                        case 1:
+                            _a.sent();
+                            info.status = status_5.STATUS.DONE;
+                            this.start();
+                            return [3, 3];
+                        case 2:
+                            e_3 = _a.sent();
+                            info.status = status_5.STATUS.PENDING;
+                            this.recordError(e_3);
+                            this.ctx.remove(info.index);
+                            this.markTry();
+                            this.start();
+                            return [3, 3];
+                        case 3: return [2];
+                    }
+                });
             });
-        }
-    }
+        };
+        return WebFile;
+    }(service_1.default));
     exports.WebFile = WebFile;
 });

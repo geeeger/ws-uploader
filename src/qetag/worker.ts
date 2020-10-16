@@ -24,7 +24,12 @@ export default class QETagWorker extends QETagBase implements Interface.QETagWor
         if (this.hash) {
             return Promise.resolve(this.hash);
         }
-        if (!window.crypto.subtle) {
+        if (typeof crypto === 'undefined') {
+            const error = new Error('Crypto API Error: crypto is not support');
+            // console.error(error);
+            return Promise.reject(error);
+        }
+        if (!crypto.subtle) {
             const error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
             return Promise.reject(error);
         }
@@ -55,7 +60,7 @@ export default class QETagWorker extends QETagBase implements Interface.QETagWor
                         } else {
                             perfex = 0x80 | perfex;
                             result = hashs.reduce((a, b): ArrayBuffer => concatBuffer(a, b));
-                            result = await window.crypto.subtle.digest('SHA-1', result);
+                            result = await crypto.subtle.digest('SHA-1', result);
                         }
                         const byte = new ArrayBuffer(1);
                         const dv = new DataView(byte);
