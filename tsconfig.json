@@ -84,6 +84,8 @@
     "./example",
     "./__tests__",
     "./jest.config.js",
-    "./coverage"
+    "./coverage",
+    "./.github",
+    "./.vscode"
   ]
 }

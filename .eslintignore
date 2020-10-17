@@ -6,3 +6,5 @@ test
 example
 __tests__
 coverage
+.github
+.vscode

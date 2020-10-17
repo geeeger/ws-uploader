@@ -113,6 +113,7 @@ export function sizeToStr(size: number): string {
 export function log(debug: boolean): any {
     return function (...args: any[]) {
         if (debug) {
+            // @ts-ignore
             console.log.apply(null, args)
         }
     }
