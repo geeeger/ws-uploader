@@ -1,10 +1,10 @@
 import Chunk from "./core/chunk";
 import { STATUS } from './constants/status';
-import Service, { FileProps, UploadedFileInfo } from './service';
+import Service, { FileProps, UploadedFileInfo, AdapterType } from './service';
 
 export { STATUS, TASK_STATUS_INFO, UPLOADING_STATUS } from './constants/status';
 
-export type AdapterType = 'Normal' | 'Worker';
+export { AdapterType, UplaodConfig, FileProps, BPutResponse, CreateFileResInfo, UploadedFileInfo, TokenInfo } from './service';
 
 interface UplaodConfig {
     /**
