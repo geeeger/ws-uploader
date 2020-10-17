@@ -24,6 +24,7 @@ export class WebFile extends Service {
 
     public pause(): Promise<any> {
         if (this.isUploading()) {
+            // this.log('pause')
             this.setStatus(STATUS.PAUSE);
             return Promise.resolve();
         }

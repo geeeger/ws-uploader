@@ -68,7 +68,7 @@ define("interface", ["require", "exports"], function (require, exports) {
 define("core/utils", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.sizeToStr = exports.createThrottle = exports.urlSafeBase64 = exports.arrayBufferToBase64 = exports.concatBuffer = exports.isObject = exports.isBlob = exports.guid = void 0;
+    exports.log = exports.sizeToStr = exports.createThrottle = exports.urlSafeBase64 = exports.arrayBufferToBase64 = exports.concatBuffer = exports.isObject = exports.isBlob = exports.guid = void 0;
     function guid() {
         return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
             var r = (Math.random() * 16) | 0;
@@ -132,6 +132,18 @@ define("core/utils", ["require", "exports"], function (require, exports) {
         return '';
     }
     exports.sizeToStr = sizeToStr;
+    function log(debug) {
+        return function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            if (debug) {
+                console.log.apply(null, args);
+            }
+        };
+    }
+    exports.log = log;
 });
 define("core/file", ["require", "exports", "core/block", "core/utils"], function (require, exports, block_1, utils_1) {
     "use strict";
@@ -767,14 +779,19 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
                 fr.onload = function () { return __awaiter(_this, void 0, void 0, function () {
                     var sha1;
                     return __generator(this, function (_a) {
-                        if (fr.result) {
-                            sha1 = crypto.subtle.digest('SHA-1', fr.result);
-                            resolve(sha1);
+                        switch (_a.label) {
+                            case 0:
+                                if (!fr.result) return [3, 2];
+                                return [4, crypto.subtle.digest('SHA-1', fr.result)];
+                            case 1:
+                                sha1 = _a.sent();
+                                resolve(sha1);
+                                return [3, 3];
+                            case 2:
+                                reject(new Error("Read file error!"));
+                                _a.label = 3;
+                            case 3: return [2];
                         }
-                        else {
-                            reject(new Error("Read file error!"));
-                        }
-                        return [2];
                     });
                 }); };
                 fr.onloadend = function () {
@@ -1214,6 +1231,11 @@ define("core/ctx", ["require", "exports"], function (require, exports) {
             enumerable: false,
             configurable: true
         });
+        Ctx.prototype.clear = function (index) {
+            if (this.ctx[index]) {
+                this.ctx[index] = [];
+            }
+        };
         Ctx.prototype.remove = function (index) {
             if (this.ctx[index]) {
                 delete this.ctx[index];
@@ -1222,8 +1244,10 @@ define("core/ctx", ["require", "exports"], function (require, exports) {
         };
         Ctx.prototype.add = function (ctx, chunk) {
             if (chunk.index === 0) {
-                this.ctx[chunk.block.index] = [];
-                this.ctx.length += 1;
+                if (!this.ctx[chunk.block.index]) {
+                    this.ctx[chunk.block.index] = [];
+                    this.ctx.length += 1;
+                }
             }
             this.ctx[chunk.block.index][chunk.index] = ctx;
         };
@@ -1297,6 +1321,7 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                 adapter: 'Normal',
                 onStatusChange: function () { }
             }, config);
+            _this.log = utils_6.log(Boolean(_this.config.debug));
             _this.sizeStr = utils_6.sizeToStr(_this.file.size);
             _this.ctx = new ctx_1.default();
             _this._setStatusHandler();
@@ -1570,7 +1595,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
         };
         WebFile.prototype.upload = function () {
             return __awaiter(this, void 0, void 0, function () {
-                var qetag, resolveRefs_1, result, e_1;
+                var qetag, resolveRefs_1, result, e_1, e_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -1579,7 +1604,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                             }
                             _a.label = 1;
                         case 1:
-                            _a.trys.push([1, 5, , 6]);
+                            _a.trys.push([1, 7, , 8]);
                             this.setStatus(status_5.STATUS.CALCULATING);
                             qetag = this._qetag();
                             qetag.removeAllListeners('race-to-stop');
@@ -1596,13 +1621,21 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                                 return [2];
                             }
                             this.setStatus(status_5.STATUS.PREPARING);
-                            if (!!this.isUploadInfoExist()) return [3, 4];
-                            return [4, this.getTokenInfo()];
+                            if (!!this.isUploadInfoExist()) return [3, 6];
+                            _a.label = 3;
                         case 3:
+                            _a.trys.push([3, 5, , 6]);
+                            return [4, this.getTokenInfo()];
+                        case 4:
                             result = _a.sent();
                             this.setFileInfo(result);
-                            _a.label = 4;
-                        case 4:
+                            return [3, 6];
+                        case 5:
+                            e_1 = _a.sent();
+                            this.recordError(e_1);
+                            this.setStatus(status_5.STATUS.FAILED);
+                            return [2];
+                        case 6:
                             if (this.isExisted()) {
                                 this.setStatus(status_5.STATUS.DONE);
                                 return [2];
@@ -1612,20 +1645,20 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                             }
                             this.setStatus(status_5.STATUS.UPLOADING);
                             this.start();
-                            return [3, 6];
-                        case 5:
-                            e_1 = _a.sent();
-                            this.recordError(e_1);
+                            return [3, 8];
+                        case 7:
+                            e_2 = _a.sent();
+                            this.recordError(e_2);
                             this.setStatus(status_5.STATUS.FAILED);
-                            return [3, 6];
-                        case 6: return [2];
+                            return [3, 8];
+                        case 8: return [2];
                     }
                 });
             });
         };
         WebFile.prototype.start = function () {
             return __awaiter(this, void 0, void 0, function () {
-                var data, res, e_2;
+                var data, res, e_3;
                 var _this = this;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
@@ -1677,10 +1710,12 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                             });
                             return [3, 5];
                         case 4:
-                            e_2 = _a.sent();
-                            this.recordError(e_2);
-                            this.markTry();
-                            this.start();
+                            e_3 = _a.sent();
+                            this.recordError(e_3);
+                            if (!this.isTryout()) {
+                                this.markTry();
+                                this.start();
+                            }
                             return [2];
                         case 5: return [2];
                     }
@@ -1727,7 +1762,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
         };
         WebFile.prototype.blockStart = function (info) {
             return __awaiter(this, void 0, void 0, function () {
-                var block, chunks, e_3;
+                var block, chunks, e_4;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -1741,12 +1776,14 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                             this.start();
                             return [3, 3];
                         case 2:
-                            e_3 = _a.sent();
+                            e_4 = _a.sent();
                             info.status = status_5.STATUS.PENDING;
-                            this.recordError(e_3);
-                            this.ctx.remove(info.index);
-                            this.markTry();
-                            this.start();
+                            this.recordError(e_4);
+                            this.ctx.clear(info.index);
+                            if (!this.isTryout()) {
+                                this.markTry();
+                                this.start();
+                            }
                             return [3, 3];
                         case 3: return [2];
                     }
