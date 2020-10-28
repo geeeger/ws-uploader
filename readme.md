@@ -1,5 +1,7 @@
 # About
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fgeeeger%2Fws-uploader.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fgeeeger%2Fws-uploader?ref=badge_shield)
+[![CodeScene Code Health](https://codescene.io/projects/7388/status-badges/code-health)](https://codescene.io/projects/7388)
+[![CodeScene System Mastery](https://codescene.io/projects/7388/status-badges/system-mastery)](https://codescene.io/projects/7388)
 
 
 清真云上传器
