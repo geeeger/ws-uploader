@@ -14,7 +14,7 @@ commonjs包, 不支持扩展，单文件实例操作分片上传
 
 [demo](https://geeeger.github.io/ws-uploader/example/index.html)
 
-[docs](https://geeeger.github.io/ws-uploader/docs/index.html)
+[docs](https://geeeger.github.io/ws-uploader/docs/)
 
 ### 静态配置
 
