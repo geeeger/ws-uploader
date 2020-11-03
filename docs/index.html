@@ -1,0 +1,320 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>@geeeger/ws-uploader</title>
+	<meta name="description" content="Documentation for @geeeger/ws-uploader">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">@geeeger/ws-uploader</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1>@geeeger/ws-uploader</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#about" id="about" style="color: inherit; text-decoration: none;">
+					<h1>About</h1>
+				</a>
+				<p><a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fgeeeger%2Fws-uploader?ref=badge_shield"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fgeeeger%2Fws-uploader.svg?type=shield" alt="FOSSA Status"></a>
+					<a href="https://codescene.io/projects/7388"><img src="https://codescene.io/projects/7388/status-badges/code-health" alt="CodeScene Code Health"></a>
+				<a href="https://codescene.io/projects/7388"><img src="https://codescene.io/projects/7388/status-badges/system-mastery" alt="CodeScene System Mastery"></a></p>
+				<p>清真云上传器</p>
+				<hr>
+				<p>commonjs包, 不支持扩展，单文件实例操作分片上传</p>
+				<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+					<h1>Usage</h1>
+				</a>
+				<p><a href="https://geeeger.github.io/ws-uploader/example/index.html">demo</a></p>
+				<p><a href="https://geeeger.github.io/ws-uploader/docs/index.html">docs</a></p>
+				<a href="#静态配置" id="静态配置" style="color: inherit; text-decoration: none;">
+					<h3>静态配置</h3>
+				</a>
+				<pre><code class="language-javascript"><span class="hljs-keyword">import</span> { WebFile <span class="hljs-keyword">as</span> Uploader } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@geeeger/ws-uploader&#x27;</span>
+Uploader.config({
+    <span class="hljs-comment">// fetch设置</span>
+    <span class="hljs-comment">// 默认如下，非必须</span>
+    clientConfig: {
+        <span class="hljs-attr">baseURL</span>: <span class="hljs-string">&#x27;https://api.2dland.cn&#x27;</span>,
+        <span class="hljs-attr">headers</span>: {
+            <span class="hljs-string">&#x27;Content-Type&#x27;</span>: <span class="hljs-string">&#x27;application/json&#x27;</span>
+        }
+    },
+    <span class="hljs-comment">// 所需用到的api</span>
+    <span class="hljs-comment">// 默认如下，非必须</span>
+    apis: {
+        <span class="hljs-attr">token</span>: <span class="hljs-string">&#x27;/v3/file/uploadToken&#x27;</span>,
+        <span class="hljs-attr">mkblk</span>: <span class="hljs-string">&#x27;/mkblk/&#x27;</span>,
+        <span class="hljs-attr">bput</span>: <span class="hljs-string">&#x27;/bput/&#x27;</span>,
+        <span class="hljs-attr">mkfile</span>: <span class="hljs-string">&#x27;/mkfile/&#x27;</span>
+    },
+
+    <span class="hljs-comment">// Authorization header key</span>
+    <span class="hljs-comment">// 默认如下，非必须</span>
+    AuthorizationTokenKey: <span class="hljs-string">&#x27;qingzhen-token&#x27;</span>,
+
+    <span class="hljs-comment">// 本地存储的localStorage key</span>
+    <span class="hljs-comment">// 默认如下，非必须</span>
+    AuthorizationStorageKey: <span class="hljs-string">&#x27;user-authorization-token&#x27;</span>,
+
+    <span class="hljs-comment">// 块重试次数，此处命名错误</span>
+    <span class="hljs-comment">// 默认如下，非必须</span>
+    chunkRetry: <span class="hljs-number">3</span>,
+
+    <span class="hljs-comment">// 不允许改动</span>
+    <span class="hljs-attr">blockSize</span>: <span class="hljs-number">4</span> * <span class="hljs-number">1024</span> * <span class="hljs-number">1024</span>,
+    <span class="hljs-attr">chunkSize</span>: <span class="hljs-number">1</span> * <span class="hljs-number">1024</span> * <span class="hljs-number">1024</span>,
+    <span class="hljs-comment">/**
+     * for block upload
+     */</span>
+    <span class="hljs-comment">// 并发上传数（块级，非必须,默认如下）</span>
+    concurrency: <span class="hljs-number">3</span>,
+    <span class="hljs-comment">// 可并发执行任务数（非必须，默认3即可）</span>
+    <span class="hljs-comment">// 此参数主要在worker任务中起作用</span>
+    <span class="hljs-comment">// 基本表示一个worker线程在非忙时可承担的最大任务数</span>
+    <span class="hljs-comment">// 设置大了意义不大</span>
+    taskConcurrencyInWorkers: <span class="hljs-number">3</span>,
+})</code></pre>
+				<a href="#一般使用" id="一般使用" style="color: inherit; text-decoration: none;">
+					<h3>一般使用</h3>
+				</a>
+				<pre><code class="language-javascript"><span class="hljs-keyword">let</span> file = MockFile(<span class="hljs-string">&#x27;test.wtf&#x27;</span>, <span class="hljs-number">10</span> * <span class="hljs-number">1024</span> * <span class="hljs-number">1024</span> + <span class="hljs-number">1058</span>, <span class="hljs-string">&#x27;plain/text&#x27;</span>)
+<span class="hljs-keyword">let</span> uploader = <span class="hljs-keyword">new</span> Uploader(file, {
+    <span class="hljs-comment">// path参数,选其一</span>
+    <span class="hljs-attr">path</span>: <span class="hljs-string">&#x27;/&#x27;</span>,
+    <span class="hljs-comment">// parent: &#x27;&#x27;,</span>
+    <span class="hljs-comment">// 是否可覆盖，非必须，默认为 0，可选值 0x00 0x02 0x20(0, 2, 32) </span>
+    op: <span class="hljs-number">2</span>
+},{
+    <span class="hljs-comment">// Worker , Normal 二选一， 默认Normal</span>
+    <span class="hljs-attr">adapter</span>: <span class="hljs-string">&#x27;Normal&#x27;</span>,
+    <span class="hljs-attr">onStatusChange</span>: <span class="hljs-function">(<span class="hljs-params">ctx, status</span>) =&gt;</span> {
+        <span class="hljs-keyword">const</span> info = {
+            ...ctx,
+            <span class="hljs-attr">file</span>: {
+                ...ctx.file,
+                <span class="hljs-attr">blocks</span>: []
+            },
+            <span class="hljs-attr">qetag</span>: <span class="hljs-literal">null</span>,
+            <span class="hljs-attr">http</span>: <span class="hljs-literal">null</span>
+        };
+
+        t.innerHTML = <span class="hljs-built_in">Object</span>.keys(info).map(<span class="hljs-function">(<span class="hljs-params">key</span>) =&gt;</span> {
+            <span class="hljs-keyword">return</span> (key + <span class="hljs-string">&#x27;:&#x27;</span>) + (<span class="hljs-keyword">typeof</span> info[key] === <span class="hljs-string">&#x27;object&#x27;</span> ? <span class="hljs-built_in">JSON</span>.stringify(info[key]) : info[key])
+        }).join(<span class="hljs-string">&#x27;&lt;hr&gt;&#x27;</span>);
+        <span class="hljs-keyword">if</span> (status === STATUS.CALCULATING) {
+            <span class="hljs-built_in">console</span>.log(ctx.hashCalcProgress)
+        }
+        <span class="hljs-keyword">if</span> (status === STATUS.UPLOADING) {
+            <span class="hljs-built_in">console</span>.log(ctx.progress)
+        }
+        <span class="hljs-keyword">if</span> (status === STATUS.FAILED) {
+            <span class="hljs-comment">// ctx 可以拿到 uploader实例， 可以报送任意内容</span>
+            <span class="hljs-comment">// uploader实例下挂载着file实例，file实例可获取到batchId，可用于打log。</span>
+            <span class="hljs-comment">// 各类信息均集中在uploader实例中，在下部分贴出</span>
+            ctx.error.map(<span class="hljs-function"><span class="hljs-params">x</span> =&gt;</span> <span class="hljs-built_in">console</span>.error(x.stack))
+        }
+        <span class="hljs-comment">// 当上传完成时，再次上传将不可用</span>
+        <span class="hljs-keyword">if</span> (status === STATUS.DONE) {
+            alert(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>() - time)
+        }
+    },
+    <span class="hljs-attr">debug</span>: <span class="hljs-literal">true</span>
+})
+
+uploader.upload()
+<span class="hljs-comment">// 在mkfile阶段禁止，理论上pause无用是正确的</span>
+delay(<span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-comment">// 调用pause只能调用resume复原.</span>
+    uploader.pause()
+    delay(<span class="hljs-function">() =&gt;</span> {
+        uploader.resume()
+    })
+}, <span class="hljs-number">1500</span>)</code></pre>
+				<a href="#各模块声明" id="各模块声明" style="color: inherit; text-decoration: none;">
+					<h3>各模块声明</h3>
+				</a>
+				<pre><code class="language-typescript"></code></pre>
+				<a href="#依赖" id="依赖" style="color: inherit; text-decoration: none;">
+					<h2>依赖</h2>
+				</a>
+				<p>依赖模块events，依赖window.crypto.subtle</p>
+				<hr>
+				<p>关于window.crypto.subtle，参见<a href="https://www.chromium.org/blink/webcrypto">webcrypto</a></p>
+				<a href="#license" id="license" style="color: inherit; text-decoration: none;">
+					<h2>License</h2>
+				</a>
+				<p><a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fgeeeger%2Fws-uploader?ref=badge_large"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fgeeeger%2Fws-uploader.svg?type=large" alt="FOSSA Status"></a></p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_constants_status_.html">&quot;constants/status&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_constants_uploader_config_.html">&quot;constants/uploader-<wbr>config&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_core_base_.html">&quot;core/base&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_core_block_.html">&quot;core/block&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_core_chunk_.html">&quot;core/chunk&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_core_ctx_.html">&quot;core/ctx&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_core_file_.html">&quot;core/file&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_core_status_.html">&quot;core/status&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_core_utils_.html">&quot;core/utils&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_http_base_.html">&quot;http/base&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_http_index_.html">&quot;http/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_http_worker_.html">&quot;http/worker&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_http_worker_script_.html">&quot;http/worker-<wbr>script&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_http_xhr_.html">&quot;http/xhr&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_index_.html">&quot;index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_interface_.html">&quot;interface&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_qetag_base_.html">&quot;qetag/base&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_qetag_index_.html">&quot;qetag/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_qetag_normal_.html">&quot;qetag/normal&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_qetag_worker_.html">&quot;qetag/worker&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_qetag_worker_script_.html">&quot;qetag/worker-<wbr>script&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_service_.html">&quot;service&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_third_parts_merge_.html">&quot;third-<wbr>parts/merge&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_third_parts_throat_.html">&quot;third-<wbr>parts/throat&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_worker_index_.html">&quot;worker/index&quot;</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

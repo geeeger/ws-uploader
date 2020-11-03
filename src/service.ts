@@ -377,6 +377,7 @@ export default class Service extends Status {
             .addStatusHandler(STATUS.DONE, () => {
                 this.progress = 100;
                 this.qetag?.removeAllListeners();
+                this.http?.removeAllListeners();
                 onChange()
             })
             .addStatusHandler(STATUS.FAILED, onChange)

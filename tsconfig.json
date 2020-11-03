@@ -86,6 +86,7 @@
     "./jest.config.js",
     "./coverage",
     "./.github",
-    "./.vscode"
+    "./.vscode",
+    "./docs"
   ]
 }
