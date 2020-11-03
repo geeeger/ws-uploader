@@ -15,16 +15,96 @@ export type QZFileProps = Interface.QZFileProps;
  * @implements {Interface.QZFile}
  */
 export default class QZFile implements Interface.QZFile {
+    /**
+     * 原始的文件对象
+     *
+     * @type {File}
+     * @memberof QZFile
+     */
     public file: File;
+
+    /**
+     * batchid
+     *
+     * @type {string}
+     * @memberof QZFile
+     */
     public batch: string;
+
+    /**
+     * 块大小
+     *
+     * @type {number}
+     * @memberof QZFile
+     */
     public blockSize: number;
+
+    /**
+     * 片大小
+     *
+     * @type {number}
+     * @memberof QZFile
+     */
     public chunkSize: number;
+
+    /**
+     * 所有块
+     *
+     * @type {Block[]}
+     * @memberof QZFile
+     */
     public blocks: Block[];
+
+    /**
+     * 文件名称
+     *
+     * @type {string}
+     * @memberof QZFile
+     */
     public name: string;
+
+    /**
+     * 文件最终修改时间
+     *
+     * @type {number}
+     * @memberof QZFile
+     */
     public lastModified: number;
+
+    /**
+     * 扩展名
+     *
+     * @type {string}
+     * @memberof QZFile
+     */
     public ext: string;
+
+    /**
+     * 文件大小
+     *
+     * @type {number}
+     * @memberof QZFile
+     */
     public size: number;
+
+    /**
+     * 文件mime类型
+     *
+     * @type {string}
+     * @memberof QZFile
+     */
     public type: string;
+
+    /**
+     * Creates an instance of QZFile.
+     * @param {Interface.QZFileProps} {
+     *         file,
+     *         blockSize,
+     *         chunkSize,
+     *         batch,
+     *     }
+     * @memberof QZFile
+     */
     public constructor({
         file,
         blockSize,
@@ -54,12 +134,26 @@ export default class QZFile implements Interface.QZFile {
         }
     }
 
+    /**
+     * 文件二进制切割
+     *
+     * @param {number} start
+     * @param {number} end
+     * @return {*}  {Blob}
+     * @memberof QZFile
+     */
     public slice(start: number, end: number): Blob {
         const file = this.file;
         const slice = file.slice;
         return slice.call(file, start, end);
     }
 
+    /**
+     * 获取所有块信息
+     *
+     * @return {*}  {Block[]}
+     * @memberof QZFile
+     */
     public getBlocks(): Block[] {
         if (this.blocks.length) {
             return this.blocks;
@@ -78,10 +172,23 @@ export default class QZFile implements Interface.QZFile {
         return blocks;
     }
 
+    /**
+     * 按索引获取块信息
+     *
+     * @param {number} index
+     * @return {*}  {Block}
+     * @memberof QZFile
+     */
     public getBlockByIndex(index: number): Block {
         return this.getBlocks()[index];
     }
 
+    /**
+     * 获取总片数量
+     *
+     * @return {*}  {number}
+     * @memberof QZFile
+     */
     public getChunksSize(): number {
         return this.getBlocks().map(block => block.getChunks().length).reduce((a, b) => a + b, 0)
     }

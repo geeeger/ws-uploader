@@ -9,7 +9,21 @@ import * as Interface from "../interface";
  * @implements {Interface.WorkersProvider}
  */
 export default class WorkerProvider extends EventEmitter implements Interface.WorkersProvider {
+    /**
+     * 每个worker可容纳任务数
+     *
+     * @type {number}
+     * @memberof WorkerProvider
+     */
     taskConcurrency: number;
+
+    /**
+     * 是否支持可转移对象
+     *
+     * @static
+     * @return {*}  {boolean}
+     * @memberof WorkerProvider
+     */
     public static isTransferablesSupported(): boolean {
         return ((): boolean => {
             // See
@@ -32,8 +46,16 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
             return !Boolean(buffer.byteLength);
         })();
     }
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    public static asyncFnMover(fn: Function): string {
+    
+    /**
+     * 移动一般函数至worker
+     *
+     * @static
+     * @param {Function} fn
+     * @return {*}  {string}
+     * @memberof WorkerProvider
+     */
+    public static asyncFnMover(fn: (...args: any[]) => any): string {
         const blob = new Blob([`
             $$=${fn.toString()};
             onmessage=function (e) {
@@ -66,8 +88,29 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
         });
         return URL.createObjectURL(blob);
     }
+
+    /**
+     * worker实例数组
+     *
+     * @type {Interface.MyWorker[]}
+     * @memberof WorkerProvider
+     */
     public workers: Interface.MyWorker[];
+
+    /**
+     * 线程数
+     *
+     * @type {number}
+     * @memberof WorkerProvider
+     */
     public cpus: number;
+
+    /**
+     * 消息实例数组
+     *
+     * @type {Interface.WorkerMessages[]}
+     * @memberof WorkerProvider
+     */
     public messages: Interface.WorkerMessages[];
     public constructor(workerPath: string, taskConcurrency = 1) {
         super();
@@ -89,6 +132,12 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
         }
     }
 
+    /**
+     * 返回消息处理函数
+     *
+     * @param {MessageEvent} e
+     * @memberof WorkerProvider
+     */
     public onmessage(e: MessageEvent): void {
         for (let i = 0; i < this.cpus; i++) {
             const worker = this.workers[i];
@@ -107,6 +156,11 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
         this.emit(channel, payload);
     }
 
+    /**
+     * 寻找空闲worker，传送任务
+     *
+     * @memberof WorkerProvider
+     */
     public run(): void {
         const idles = this.workers.filter((worker: Interface.MyWorker): boolean => !worker.buzy);
         for (let i = this.messages.length - 1; i >= 0; i--) {
@@ -127,11 +181,23 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
         }
     }
 
+    /**
+     * 发送任务
+     *
+     * @param {Interface.WorkerMessage} message
+     * @param {PostMessageOptions} [options]
+     * @memberof WorkerProvider
+     */
     public send(message: Interface.WorkerMessage, options?: PostMessageOptions): void {
         this.messages.push([message, options]);
         this.run();
     }
 
+    /**
+     * 销毁
+     *
+     * @memberof WorkerProvider
+     */
     public destroy(): void {
         this.workers.forEach((worker: Interface.MyWorker): void => {
             worker.instance.terminate();
@@ -141,6 +207,12 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
         this.removeAllListeners();
     }
 
+    /**
+     * 移除指定任务
+     *
+     * @param {Interface.WorkerMessage} message
+     * @memberof WorkerProvider
+     */
     public removeMessage(message: Interface.WorkerMessage): void {
         if (this.messages) {
             for (let index = 0; index < this.messages.length; index++) {
@@ -153,6 +225,12 @@ export default class WorkerProvider extends EventEmitter implements Interface.Wo
         }
     }
 
+    /**
+     * 按消息通道移除任务
+     *
+     * @param {string} channel
+     * @memberof WorkerProvider
+     */
     public removeMessagesByChannel(channel: string): void {
         if (this.messages) {
             let index = 0;

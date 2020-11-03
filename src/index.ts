@@ -15,13 +15,39 @@ interface UplaodConfig {
     debug?: boolean
 }
 
+/**
+ * Uploader
+ *
+ * @export
+ * @class WebFile
+ * @extends {Service}
+ */
 export class WebFile extends Service {
+    /**
+     * 上传任务标记
+     *
+     * @type {any[]}
+     * @memberof WebFile
+     */
     pos: any[] = [];
+
+    /**
+     * Creates an instance of WebFile.
+     * @param {File} file
+     * @param {FileProps} [fileProps={}]
+     * @param {UplaodConfig} [config={}]
+     * @memberof WebFile
+     */
     constructor (file: File, fileProps: FileProps = {}, config: UplaodConfig = {}) {
         super(file, fileProps, config);
     }
 
-
+    /**
+     * 暂停上传
+     *
+     * @return {*}  {Promise<any>}
+     * @memberof WebFile
+     */
     public pause(): Promise<any> {
         if (this.isUploading()) {
             // this.log('pause')
@@ -31,6 +57,12 @@ export class WebFile extends Service {
         return Promise.reject(new Error(`Warning: Non-uploading`));
     }
 
+    /**
+     * 恢复上传
+     *
+     * @return {*}  {Promise<any>}
+     * @memberof WebFile
+     */
     public resume(): Promise<any> {
         if (this.isFailed()) {
             this.restTryCount();
@@ -45,11 +77,23 @@ export class WebFile extends Service {
         return Promise.reject(new Error(`Warning: Uploading`));
     }
 
+    /**
+     * 取消上传
+     *
+     * @return {*}  {Promise<any>}
+     * @memberof WebFile
+     */
     public cancel(): Promise<any> {
         this.setStatus(STATUS.CANCEL);
         return Promise.resolve();
     }
 
+    /**
+     * 上传
+     *
+     * @return {*}  {Promise<any>}
+     * @memberof WebFile
+     */
     public async upload(): Promise<any> {
         if (this.isUploading()) {
             throw new Error(`Warning: Uploading`);
@@ -97,6 +141,12 @@ export class WebFile extends Service {
         }
     }
 
+    /**
+     * 开始上传
+     *
+     * @return {*}  {Promise<any>}
+     * @memberof WebFile
+     */
     public async start(): Promise<any> {
         if (this.isDone()) {
             return;
@@ -155,6 +205,11 @@ export class WebFile extends Service {
         }
     }
 
+    /**
+     * 设置上传位置
+     *
+     * @memberof WebFile
+     */
     public setPos(): void {
         let pos = Math.max.apply(null, this.pos.length ? this.pos.map(p => p.index) : [-1]);
         this.pos = this.pos.filter((pos) => pos.status !== STATUS.DONE);
@@ -174,6 +229,14 @@ export class WebFile extends Service {
         }
     }
 
+    /**
+     * 生成片上传promise任务
+     *
+     * @private
+     * @param {Chunk[]} chunks
+     * @return {*}  {Promise<any>}
+     * @memberof WebFile
+     */
     private _orderTask(chunks: Chunk[]): Promise<any> {
         let promise: Promise<any> = Promise.resolve();
 
@@ -192,6 +255,13 @@ export class WebFile extends Service {
         return promise
     }
 
+    /**
+     * 开始上传块
+     *
+     * @param {*} info
+     * @return {*}  {Promise<any>}
+     * @memberof WebFile
+     */
     public async blockStart(info: any): Promise<any> {
         try {
             const block = this.file.getBlockByIndex(info.index);

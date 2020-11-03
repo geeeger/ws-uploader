@@ -12,13 +12,33 @@ import HttpClient from './base';
  * @implements {Interface.HttpClient}
  */
 export default class Http extends HttpClient implements Interface.HttpClient {
+    /**
+     * 消息频道
+     *
+     * @type {string}
+     * @memberof Http
+     */
     public channel: string;
 
+    /**
+     * Creates an instance of Http.
+     * @param {*} [_]
+     * @memberof Http
+     */
     constructor(_?: any) {
         super();
         this.channel = guid();
     }
 
+    /**
+     * 发送请求
+     *
+     * @template T
+     * @param {HttpClientProps} props
+     * @param {*} [{ isEmitEvent }={}]
+     * @return {*}  {Promise<T>}
+     * @memberof Http
+     */
     public post<T>(props: HttpClientProps, { isEmitEvent }: any = {}): Promise<T> {
         return fetch(props.url, {
             body: props.data,

@@ -1,3 +1,10 @@
+/**
+ * worker计算hash用脚本方法
+ *
+ * @export
+ * @param {*} data
+ * @return {*}  {Promise<any>}
+ */
 export default function handler(data: any): Promise<any> {
     return new Promise(function (resolve, reject) {
         const payload = data.payload;

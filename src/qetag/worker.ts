@@ -3,10 +3,38 @@ import QETagBase from "./base";
 import * as Interface from "../interface";
 import { guid, concatBuffer, arrayBufferToBase64, urlSafeBase64 } from "../core/utils";
 
+/**
+ * 提供计算qetag的worker服务
+ *
+ * @export
+ * @class QETagWorker
+ * @extends {QETagBase}
+ * @implements {Interface.QETagWorker}
+ */
 export default class QETagWorker extends QETagBase implements Interface.QETagWorker {
+    /**
+     * 服务提供
+     *
+     * @type {Interface.WorkersProvider}
+     * @memberof QETagWorker
+     */
     public workers: Interface.WorkersProvider;
+    /**
+     * 消息频道
+     *
+     * @type {string}
+     * @memberof QETagWorker
+     */
     public channel: string;
 
+    /**
+     * Creates an instance of QETagWorker.
+     * @param {Interface.QZFile} file
+     * @param {{
+     *         workers: Interface.WorkersProvider;
+     *     }} opts
+     * @memberof QETagWorker
+     */
     constructor(file: Interface.QZFile, opts: {
         workers: Interface.WorkersProvider;
     }) {
@@ -15,6 +43,16 @@ export default class QETagWorker extends QETagBase implements Interface.QETagWor
         this.channel = guid();
     }
 
+    /**
+     * 计算并获取hash
+     *
+     * @param {*} [{ isTransferSupported, isEmitEvent }={}]
+     * @param {Promise<string>} [racePromise=new Promise((res) => {
+     *             // do nothing
+     *         })]
+     * @return {*}  {Promise<string>}
+     * @memberof QETagWorker
+     */
     public get(
         { isTransferSupported, isEmitEvent }: any = {},
         racePromise: Promise<string> = new Promise((res) => {

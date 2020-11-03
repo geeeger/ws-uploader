@@ -4,14 +4,41 @@ import QETagBase from "./base";
 import * as Interface from "../interface";
 import { concatBuffer, arrayBufferToBase64, urlSafeBase64 } from "../core/utils";
 
+/**
+ * 提供计算qetag的普通服务
+ *
+ * @export
+ * @class QETagNormal
+ * @extends {QETagBase}
+ * @implements {Interface.QETagNormal}
+ */
 export default class QETagNormal extends QETagBase implements Interface.QETagNormal {
+    /**
+     * 同时进行的任务数量
+     *
+     * @type {number}
+     * @memberof QETagNormal
+     */
     public concurrency: number;
 
+    /**
+     * Creates an instance of QETagNormal.
+     * @param {Interface.QZFile} file
+     * @param {*} [_]
+     * @memberof QETagNormal
+     */
     constructor(file: Interface.QZFile, _?: any) {
         super(file);
         this.concurrency = window.navigator.hardwareConcurrency || 1;
     }
 
+    /**
+     * 加载下一块数据并计算sha-1
+     *
+     * @param {Interface.Block} block
+     * @return {*}  {Promise<ArrayBuffer>}
+     * @memberof QETagNormal
+     */
     public loadNext(block: Interface.Block): Promise<ArrayBuffer> {
         return new Promise((resolve, reject): void => {
             const fr = new FileReader();
@@ -33,6 +60,16 @@ export default class QETagNormal extends QETagBase implements Interface.QETagNor
         });
     }
 
+    /**
+     * 获取hash
+     *
+     * @param {*} [{ isEmitEvent }={}]
+     * @param {Promise<string>} [racePromise=new Promise((res) => {
+     *             // do nothing
+     *         })]
+     * @return {*}  {Promise<string>}
+     * @memberof QETagNormal
+     */
     public get(
         { isEmitEvent }: any = {},
         racePromise: Promise<string> = new Promise((res) => {
