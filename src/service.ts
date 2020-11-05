@@ -3,6 +3,7 @@ import Status from "./core/status";
 import HttpClient from "./http/xhr";
 import WorkerClient from "./http/worker";
 import QeTag from "./qetag/index";
+import QETagBase from './qetag/base';
 import QeTagNormal from "./qetag/normal";
 import QeTagWorker from "./qetag/worker";
 import WorkerProvider from "./worker/index";
@@ -10,7 +11,7 @@ import QeTagWorkerScript from './qetag/worker-script';
 import uploaderWorkerScript from './http/worker-script';
 import QZFile from "./core/file";
 import Http from "./http/index";
-import { createThrottle, log, sizeToStr } from "./core/utils";
+import { createThrottle, log, makePromiseChain, sizeToStr } from "./core/utils";
 import { STATUS } from "./constants/status";
 import Ctx from "./core/ctx";
 import Chunk from "./core/chunk";
@@ -472,19 +473,26 @@ export default class Service extends Status {
 
     /**
      * @description 提供获取hash值服务
-     * @param {Promise<string>} raceFunction
-     * @returns {Promise<string>}
+     * @return {*}  {Promise<QETagBase>}
      * @memberof Service
      */
-    getHash(raceFunction: Promise<string>): Promise<string> {
+    calcHash(): Promise<QETagBase> {
         const qetag = this._qetag();
         if (qetag.isExist()) {
-            return Promise.resolve(qetag.getSync());
+            return Promise.resolve(qetag);
         }
-        return qetag.get({
+
+        const config = {
             isTransferablesSupported: WorkerProvider.isTransferablesSupported(),
-            isEmitEvent: true
-        }, raceFunction);
+            isEmitEvent: true,
+            tag: qetag
+        }
+
+        return makePromiseChain<Promise<QETagBase>>(
+            config,
+            qetag.calc.bind(qetag),
+            Service.interceptors.qetag
+        );
     }
 
     /**
@@ -492,9 +500,9 @@ export default class Service extends Status {
      * @returns {string}
      * @memberof Service
      */
-    getHashSync(): string {
+    getHash(): string {
         const qetag = this._qetag();
-        return qetag.getSync();
+        return qetag.get();
     }
 
     /**
@@ -536,7 +544,7 @@ export default class Service extends Status {
         const params: {
             [key: string]: any;
         } = {
-            hash: this.getHashSync(),
+            hash: this.getHash(),
             name: this.file.name,
             op: this.props.op || 0
         }

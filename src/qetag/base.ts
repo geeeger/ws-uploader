@@ -45,6 +45,25 @@ export default class QETagBase extends EventEmitter implements Interface.QETagBa
     public process: number;
 
     /**
+     * @description 储存干净的hash（未加料）
+     * @memberof QETagBase
+     */
+    public pureHash = '';
+
+    /**
+     * @description 干净hash的 arraybuffer
+     * @type {ArrayBuffer[]}
+     * @memberof QETagBase
+     */
+    public hashs: ArrayBuffer[] = [];
+
+    /**
+     * @description 是否停止计算的引用标志
+     * @memberof QETagBase
+     */
+    public raceToStop = false;
+
+    /**
      * Creates an instance of QETagBase.
      * @param {Interface.QZFile} file
      * @memberof QETagBase
@@ -67,12 +86,21 @@ export default class QETagBase extends EventEmitter implements Interface.QETagBa
     }
 
     /**
+     * @description 待实现
+     * @return {*}  {Promise<this>}
+     * @memberof QETagBase
+     */
+    public calc(): Promise<this> {
+        return Promise.resolve(this)
+    }
+
+    /**
      * 同步获取hash值
      *
      * @return {*}  {string}
      * @memberof QETagBase
      */
-    public getSync(): string {
+    public get(): string {
         return this.hash;
     }
 

@@ -100,17 +100,8 @@ export class WebFile extends Service {
         }
         try {
             this.setStatus(STATUS.CALCULATING);
-            const qetag = this._qetag()
-            qetag.removeAllListeners('race-to-stop')
-            let resolveRefs: any;
-            qetag.on('race-to-stop', () => {
-                resolveRefs && resolveRefs('race-to-stop')
-            })
-            await this.getHash(new Promise((resolve) => {
-                resolveRefs = resolve
-            }));
-            if (qetag.getSync() === 'race-to-stop') {
-                qetag.set('')
+            const qetag = await this.calcHash();
+            if (qetag.raceToStop) {
                 return;
             }
             this.setStatus(STATUS.PREPARING);
@@ -181,7 +172,7 @@ export class WebFile extends Service {
                     throw new Error(`Create: ${data.message}`);
                 }
                 const res = JSON.parse(data.response as string) as UploadedFileInfo;
-                if (res.hash !== this.getHashSync()) {
+                if (res.hash !== this.getHash()) {
                     throw new Error(`Warning: File check failed`);
                 }
                 this.setNormalFile(res);

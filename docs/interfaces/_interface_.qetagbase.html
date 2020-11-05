@@ -102,13 +102,16 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interface_.qetagbase.html#file" class="tsd-kind-icon">file</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interface_.qetagbase.html#hash" class="tsd-kind-icon">hash</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interface_.qetagbase.html#hashs" class="tsd-kind-icon">hashs</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interface_.qetagbase.html#purehash" class="tsd-kind-icon">pure<wbr>Hash</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interface_.qetagbase.html#racetostop" class="tsd-kind-icon">race<wbr>ToStop</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_interface_.qetagbase.html#calc" class="tsd-kind-icon">calc</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_interface_.qetagbase.html#get" class="tsd-kind-icon">get</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_interface_.qetagbase.html#getsync" class="tsd-kind-icon">get<wbr>Sync</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_interface_.qetagbase.html#set" class="tsd-kind-icon">set</a></li>
 							</ul>
 						</section>
@@ -123,7 +126,7 @@
 					<div class="tsd-signature tsd-kind-icon">file<span class="tsd-signature-symbol">:</span> <a href="_interface_.qzfile.html" class="tsd-signature-type">QZFile</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/43ae1e6/src/interface.ts#L77">src/interface.ts:77</a></li>
+							<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/7a53d94/src/interface.ts#L77">src/interface.ts:77</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -133,7 +136,37 @@
 					<div class="tsd-signature tsd-kind-icon">hash<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/43ae1e6/src/interface.ts#L78">src/interface.ts:78</a></li>
+							<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/7a53d94/src/interface.ts#L78">src/interface.ts:78</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="hashs" class="tsd-anchor"></a>
+					<h3>hashs</h3>
+					<div class="tsd-signature tsd-kind-icon">hashs<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ArrayBuffer</span><span class="tsd-signature-symbol">[]</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/7a53d94/src/interface.ts#L80">src/interface.ts:80</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="purehash" class="tsd-anchor"></a>
+					<h3>pure<wbr>Hash</h3>
+					<div class="tsd-signature tsd-kind-icon">pure<wbr>Hash<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/7a53d94/src/interface.ts#L79">src/interface.ts:79</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="racetostop" class="tsd-anchor"></a>
+					<h3>race<wbr>ToStop</h3>
+					<div class="tsd-signature tsd-kind-icon">race<wbr>ToStop<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/7a53d94/src/interface.ts#L81">src/interface.ts:81</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -141,33 +174,33 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="get" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> get</h3>
+					<a name="calc" class="tsd-anchor"></a>
+					<h3>calc</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PromiseLike</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">calc<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PromiseLike</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/43ae1e6/src/interface.ts#L79">src/interface.ts:79</a></li>
+									<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/7a53d94/src/interface.ts#L82">src/interface.ts:82</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PromiseLike</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PromiseLike</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="getsync" class="tsd-anchor"></a>
-					<h3>get<wbr>Sync</h3>
+					<a name="get" class="tsd-anchor"></a>
+					<h3>get</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Sync<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/43ae1e6/src/interface.ts#L81">src/interface.ts:81</a></li>
+									<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/7a53d94/src/interface.ts#L84">src/interface.ts:84</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -184,7 +217,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/43ae1e6/src/interface.ts#L80">src/interface.ts:80</a></li>
+									<li>Defined in <a href="https://github.com/geeeger/ws-uploader/blob/7a53d94/src/interface.ts#L83">src/interface.ts:83</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -205,80 +238,8 @@
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_constants_status_.html">&quot;constants/status&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_constants_uploader_config_.html">&quot;constants/uploader-<wbr>config&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_core_base_.html">&quot;core/base&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_core_block_.html">&quot;core/block&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_core_chunk_.html">&quot;core/chunk&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_core_ctx_.html">&quot;core/ctx&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_core_file_.html">&quot;core/file&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_core_status_.html">&quot;core/status&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_core_utils_.html">&quot;core/utils&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_http_base_.html">&quot;http/base&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_http_index_.html">&quot;http/index&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_http_worker_.html">&quot;http/worker&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_http_worker_script_.html">&quot;http/worker-<wbr>script&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_http_xhr_.html">&quot;http/xhr&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_index_.html">&quot;index&quot;</a>
-					</li>
 					<li class="current tsd-kind-module">
 						<a href="../modules/_interface_.html">&quot;interface&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_qetag_base_.html">&quot;qetag/base&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_qetag_index_.html">&quot;qetag/index&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_qetag_normal_.html">&quot;qetag/normal&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_qetag_worker_.html">&quot;qetag/worker&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_qetag_worker_script_.html">&quot;qetag/worker-<wbr>script&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_service_.html">&quot;service&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_third_parts_merge_.html">&quot;third-<wbr>parts/merge&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_third_parts_throat_.html">&quot;third-<wbr>parts/throat&quot;</a>
-					</li>
-					<li class=" tsd-kind-module">
-						<a href="../modules/_worker_index_.html">&quot;worker/index&quot;</a>
 					</li>
 				</ul>
 			</nav>
@@ -310,11 +271,20 @@
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="_interface_.qetagbase.html#hash" class="tsd-kind-icon">hash</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_interface_.qetagbase.html#get" class="tsd-kind-icon">get</a>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="_interface_.qetagbase.html#hashs" class="tsd-kind-icon">hashs</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="_interface_.qetagbase.html#purehash" class="tsd-kind-icon">pure<wbr>Hash</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="_interface_.qetagbase.html#racetostop" class="tsd-kind-icon">race<wbr>ToStop</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_interface_.qetagbase.html#getsync" class="tsd-kind-icon">get<wbr>Sync</a>
+								<a href="_interface_.qetagbase.html#calc" class="tsd-kind-icon">calc</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="_interface_.qetagbase.html#get" class="tsd-kind-icon">get</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="_interface_.qetagbase.html#set" class="tsd-kind-icon">set</a>
@@ -359,6 +329,7 @@
 				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
 				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
 				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
@@ -366,10 +337,11 @@
 				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
 			</ul>
 		</div>
 	</div>

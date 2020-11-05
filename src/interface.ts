@@ -76,9 +76,12 @@ export interface Chunk {
 export interface QETagBase {
     file: QZFile;
     hash: string;
-    get?(): PromiseLike<string>;
+    pureHash: string;
+    hashs: ArrayBuffer[];
+    raceToStop: boolean;
+    calc(): PromiseLike<this>;
     set(hash: string): void;
-    getSync(): string;
+    get(): string;
 }
 
 export interface QETagNormal extends QETagBase {

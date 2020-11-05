@@ -5,7 +5,7 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
@@ -14,17 +14,6 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -61,6 +50,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 define("interface", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -68,7 +68,7 @@ define("interface", ["require", "exports"], function (require, exports) {
 define("core/utils", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.log = exports.sizeToStr = exports.createThrottle = exports.urlSafeBase64 = exports.arrayBufferToBase64 = exports.concatBuffer = exports.isObject = exports.isBlob = exports.guid = void 0;
+    exports.makePromiseChain = exports.log = exports.sizeToStr = exports.createThrottle = exports.urlSafeBase64 = exports.arrayBufferToBase64 = exports.concatBuffer = exports.isObject = exports.isBlob = exports.guid = void 0;
     function guid() {
         return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
             var r = (Math.random() * 16) | 0;
@@ -144,6 +144,21 @@ define("core/utils", ["require", "exports"], function (require, exports) {
         };
     }
     exports.log = log;
+    function makePromiseChain(config, service, interceptors) {
+        var chain = [service, undefined];
+        interceptors.request.forEach(function (interceptor) {
+            chain.unshift(interceptor.fulfilled, interceptor.rejected);
+        });
+        interceptors.response.forEach(function (interceptor) {
+            chain.push(interceptor.fulfilled, interceptor.rejected);
+        });
+        var promise = Promise.resolve(config);
+        while (chain.length) {
+            promise = promise.then(chain.shift(), chain.shift());
+        }
+        return promise;
+    }
+    exports.makePromiseChain = makePromiseChain;
 });
 define("core/file", ["require", "exports", "core/block", "core/utils"], function (require, exports, block_1, utils_1) {
     "use strict";
@@ -441,9 +456,169 @@ define("third-parts/merge", ["require", "exports"], function (require, exports) 
         return result;
     }
 });
-define("core/base", ["require", "exports", "constants/uploader-config", "third-parts/merge"], function (require, exports, uploader_config_1, merge_1) {
+define("qetag/base", ["require", "exports", "events"], function (require, exports, events_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    var QETagBase = (function (_super) {
+        __extends(QETagBase, _super);
+        function QETagBase(file) {
+            var _this = _super.call(this) || this;
+            _this.pureHash = '';
+            _this.hashs = [];
+            _this.raceToStop = false;
+            _this.file = file;
+            _this.hash = "";
+            _this.process = 0;
+            return _this;
+        }
+        QETagBase.prototype.set = function (hash) {
+            this.hash = hash;
+        };
+        QETagBase.prototype.calc = function () {
+            return Promise.resolve(this);
+        };
+        QETagBase.prototype.get = function () {
+            return this.hash;
+        };
+        QETagBase.prototype.isExist = function () {
+            return Boolean(this.hash);
+        };
+        QETagBase.Events = {
+            UpdateProgress: 'UpdateProgress'
+        };
+        return QETagBase;
+    }(events_1.EventEmitter));
+    exports.default = QETagBase;
+});
+define("core/interceptor-manager", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var InterceptorManager = (function () {
+        function InterceptorManager() {
+            this.handlers = [];
+        }
+        InterceptorManager.prototype.use = function (fulfilled, rejected, alias) {
+            if (alias === void 0) { alias = ''; }
+            this.handlers.push({
+                fulfilled: fulfilled,
+                rejected: rejected,
+                name: alias
+            });
+        };
+        InterceptorManager.prototype.replace = function (name, fulfilled, rejected) {
+            for (var index = 0; index < this.handlers.length; index++) {
+                var element = this.handlers[index];
+                if (element.name === name) {
+                    element.fulfilled = fulfilled;
+                    element.rejected = rejected;
+                    return;
+                }
+            }
+        };
+        InterceptorManager.prototype.forEach = function (fn) {
+            this.handlers.forEach(fn);
+        };
+        return InterceptorManager;
+    }());
+    exports.default = InterceptorManager;
+});
+define("core/interceptors/qetag", ["require", "exports", "core/interceptor-manager", "core/utils"], function (require, exports, interceptor_manager_1, utils_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    interceptor_manager_1 = __importDefault(interceptor_manager_1);
+    var qetag = {
+        request: new interceptor_manager_1.default(),
+        response: new interceptor_manager_1.default()
+    };
+    qetag.request.use(function preparQeTagCalcConfig(config) {
+        var tag = config.tag;
+        tag.raceToStop = false;
+        tag.removeAllListeners('race-to-stop');
+        var rejectRefs;
+        config.racePromise = new Promise(function (_, reject) {
+            rejectRefs = reject;
+        });
+        tag.on('race-to-stop', function () {
+            var error = new Error('race-to-stop');
+            error.tag = tag;
+            rejectRefs && rejectRefs(error);
+        });
+        return config;
+    }, undefined, 'prepare-race-to-stop-action');
+    qetag.request.use(function throwErrorIfNotSupport(config) {
+        if (typeof crypto === 'undefined') {
+            var error = new Error('Crypto API Error: crypto is not support');
+            return Promise.reject(error);
+        }
+        if (!crypto.subtle) {
+            var error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
+            return Promise.reject(error);
+        }
+        return config;
+    }, undefined, 'throw-if-crypto-not-support');
+    qetag.response.use(function (i) {
+        return i;
+    }, function handleRaceToStop(error) {
+        var tag = error.tag;
+        if (error.message === 'race-to-stop') {
+            tag.raceToStop = true;
+            tag.hash = '';
+            return tag;
+        }
+        return Promise.reject(error);
+    }, 'handle-race-to-stop-action');
+    qetag.response.use(function calcPureHash(tag) {
+        return __awaiter(this, void 0, void 0, function () {
+            var file, hashs, perfex, isSmallFile, hash, byte, dv;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        file = tag.file, hashs = tag.hashs;
+                        perfex = Math.log2(file.blockSize);
+                        isSmallFile = hashs.length === 1;
+                        hash = null;
+                        if (!isSmallFile) return [3, 1];
+                        hash = hashs[0];
+                        return [3, 3];
+                    case 1:
+                        perfex = 0x80 | perfex;
+                        hash = hashs.reduce(function (a, b) { return utils_2.concatBuffer(a, b); });
+                        return [4, crypto.subtle.digest('SHA-1', hash)];
+                    case 2:
+                        hash = _a.sent();
+                        _a.label = 3;
+                    case 3:
+                        byte = new ArrayBuffer(1);
+                        dv = new DataView(byte);
+                        dv.setUint8(0, perfex);
+                        hash = utils_2.concatBuffer(byte, hash);
+                        hash = utils_2.arrayBufferToBase64(hash);
+                        tag.pureHash = utils_2.urlSafeBase64(hash);
+                        return [2, tag];
+                }
+            });
+        });
+    }, undefined, 'calc-pure-hash');
+    qetag.response.use(function getHash(tag) {
+        if (!tag.raceToStop) {
+            tag.set(tag.pureHash + tag.file.size.toString(36));
+        }
+        return tag;
+    }, undefined, 'calc-hash');
+    exports.default = qetag;
+});
+define("core/interceptors/index", ["require", "exports", "core/interceptors/qetag"], function (require, exports, qetag_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    qetag_1 = __importDefault(qetag_1);
+    exports.default = {
+        qetag: qetag_1.default
+    };
+});
+define("core/base", ["require", "exports", "constants/uploader-config", "third-parts/merge", "core/interceptors/index"], function (require, exports, uploader_config_1, merge_1, index_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    index_1 = __importDefault(index_1);
     var Base = (function () {
         function Base() {
         }
@@ -451,6 +626,7 @@ define("core/base", ["require", "exports", "constants/uploader-config", "third-p
             Base.default = merge_1.merge(Base.default, config);
         };
         Base.default = uploader_config_1.UploaderConfig;
+        Base.interceptors = index_1.default;
         return Base;
     }());
     exports.default = Base;
@@ -458,7 +634,6 @@ define("core/base", ["require", "exports", "constants/uploader-config", "third-p
 define("core/status", ["require", "exports", "constants/status", "core/base", "constants/status"], function (require, exports, status_1, base_1, status_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.UPLOADING_STATUS = exports.TASK_STATUS_INFO = exports.STATUS = void 0;
     base_1 = __importDefault(base_1);
     Object.defineProperty(exports, "STATUS", { enumerable: true, get: function () { return status_2.STATUS; } });
     Object.defineProperty(exports, "TASK_STATUS_INFO", { enumerable: true, get: function () { return status_2.TASK_STATUS_INFO; } });
@@ -539,7 +714,7 @@ define("core/status", ["require", "exports", "constants/status", "core/base", "c
     }(base_1.default));
     exports.default = Status;
 });
-define("http/base", ["require", "exports", "events"], function (require, exports, events_1) {
+define("http/base", ["require", "exports", "events"], function (require, exports, events_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var HttpClient = (function (_super) {
@@ -551,10 +726,10 @@ define("http/base", ["require", "exports", "events"], function (require, exports
             UpdateProgress: 'UpdateProgress'
         };
         return HttpClient;
-    }(events_1.EventEmitter));
+    }(events_2.EventEmitter));
     exports.default = HttpClient;
 });
-define("http/xhr", ["require", "exports", "core/utils", "http/base"], function (require, exports, utils_2, base_2) {
+define("http/xhr", ["require", "exports", "core/utils", "http/base"], function (require, exports, utils_3, base_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     base_2 = __importDefault(base_2);
@@ -562,7 +737,7 @@ define("http/xhr", ["require", "exports", "core/utils", "http/base"], function (
         __extends(Http, _super);
         function Http(_) {
             var _this = _super.call(this) || this;
-            _this.channel = utils_2.guid();
+            _this.channel = utils_3.guid();
             return _this;
         }
         Http.prototype.post = function (props, _a) {
@@ -590,7 +765,7 @@ define("http/xhr", ["require", "exports", "core/utils", "http/base"], function (
     }(base_2.default));
     exports.default = Http;
 });
-define("http/worker", ["require", "exports", "core/utils", "http/base"], function (require, exports, utils_3, base_3) {
+define("http/worker", ["require", "exports", "core/utils", "http/base"], function (require, exports, utils_4, base_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     base_3 = __importDefault(base_3);
@@ -599,14 +774,14 @@ define("http/worker", ["require", "exports", "core/utils", "http/base"], functio
         function HttpWorker(opts) {
             var _this = _super.call(this) || this;
             _this.workers = opts.workers;
-            _this.channel = utils_3.guid();
+            _this.channel = utils_4.guid();
             return _this;
         }
         HttpWorker.prototype.post = function (props, _a) {
             var _this = this;
             var _b = _a === void 0 ? {} : _a, isTransferSupported = _b.isTransferSupported, isEmitEvent = _b.isEmitEvent;
             return new Promise(function (resolve, reject) {
-                var channel = utils_3.guid();
+                var channel = utils_4.guid();
                 _this.workers.on(channel, function (payload) {
                     if (payload.type === 'error') {
                         _this.workers.removeAllListeners(channel);
@@ -632,34 +807,6 @@ define("http/worker", ["require", "exports", "core/utils", "http/base"], functio
         return HttpWorker;
     }(base_3.default));
     exports.default = HttpWorker;
-});
-define("qetag/base", ["require", "exports", "events"], function (require, exports, events_2) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var QETagBase = (function (_super) {
-        __extends(QETagBase, _super);
-        function QETagBase(file) {
-            var _this = _super.call(this) || this;
-            _this.file = file;
-            _this.hash = "";
-            _this.process = 0;
-            return _this;
-        }
-        QETagBase.prototype.set = function (hash) {
-            this.hash = hash;
-        };
-        QETagBase.prototype.getSync = function () {
-            return this.hash;
-        };
-        QETagBase.prototype.isExist = function () {
-            return Boolean(this.hash);
-        };
-        QETagBase.Events = {
-            UpdateProgress: 'UpdateProgress'
-        };
-        return QETagBase;
-    }(events_2.EventEmitter));
-    exports.default = QETagBase;
 });
 define("third-parts/throat", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -760,7 +907,7 @@ define("third-parts/throat", ["require", "exports"], function (require, exports)
     }
     exports.default = throat;
 });
-define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base", "core/utils"], function (require, exports, throat_1, base_4, utils_4) {
+define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"], function (require, exports, throat_1, base_4) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     throat_1 = __importDefault(throat_1);
@@ -803,22 +950,10 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
                 fr.readAsArrayBuffer(block.blob);
             });
         };
-        QETagNormal.prototype.get = function (_a, racePromise) {
+        QETagNormal.prototype.calc = function (_a) {
             var _this = this;
-            var isEmitEvent = (_a === void 0 ? {} : _a).isEmitEvent;
-            if (racePromise === void 0) { racePromise = new Promise(function (res) {
-            }); }
-            if (this.hash) {
-                return Promise.resolve(this.hash);
-            }
-            if (typeof crypto === 'undefined') {
-                var error = new Error('Crypto API Error: crypto is not support');
-                return Promise.reject(error);
-            }
-            if (!crypto.subtle) {
-                var error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
-                return Promise.reject(error);
-            }
+            var _b = _a === void 0 ? {} : _a, isEmitEvent = _b.isEmitEvent, _c = _b.racePromise, racePromise = _c === void 0 ? new Promise(function (res) {
+            }) : _c;
             var blocks = this.file.getBlocks();
             var blocksLength = blocks.length;
             var hashsLength = 0;
@@ -827,9 +962,7 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
                 Promise.all(blocks
                     .map(throat_1.default().apply(this, [this.concurrency, function (block) {
                         return Promise.race([
-                            racePromise.then(function () {
-                                throw new Error('Racing interrupted');
-                            }),
+                            racePromise,
                             _this.loadNext(block)
                         ]).then(function (sha1) {
                             hashsLength++;
@@ -839,39 +972,12 @@ define("qetag/normal", ["require", "exports", "third-parts/throat", "qetag/base"
                         });
                     }])))
                     .then(function (hashs) { return __awaiter(_this, void 0, void 0, function () {
-                    var perfex, isSmallFile, hash, byte, dv, calcedhash;
                     return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                perfex = Math.log2(this.file.blockSize);
-                                isSmallFile = hashs.length === 1;
-                                hash = null;
-                                if (!isSmallFile) return [3, 1];
-                                hash = hashs[0];
-                                return [3, 3];
-                            case 1:
-                                perfex = 0x80 | perfex;
-                                hash = hashs.reduce(function (a, b) { return utils_4.concatBuffer(a, b); });
-                                return [4, crypto.subtle.digest('SHA-1', hash)];
-                            case 2:
-                                hash = _a.sent();
-                                _a.label = 3;
-                            case 3:
-                                byte = new ArrayBuffer(1);
-                                dv = new DataView(byte);
-                                dv.setUint8(0, perfex);
-                                hash = utils_4.concatBuffer(byte, hash);
-                                hash = utils_4.arrayBufferToBase64(hash);
-                                calcedhash = utils_4.urlSafeBase64(hash) + this.file.size.toString(36);
-                                return [2, calcedhash];
-                        }
+                        this.hashs = hashs;
+                        return [2, this];
                     });
                 }); })
-            ])
-                .then(function (res) {
-                _this.hash = res;
-                return res;
-            });
+            ]);
         };
         return QETagNormal;
     }(base_4.default));
@@ -889,22 +995,10 @@ define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], funct
             _this.channel = utils_5.guid();
             return _this;
         }
-        QETagWorker.prototype.get = function (_a, racePromise) {
+        QETagWorker.prototype.calc = function (_a) {
             var _this = this;
-            var _b = _a === void 0 ? {} : _a, isTransferSupported = _b.isTransferSupported, isEmitEvent = _b.isEmitEvent;
-            if (racePromise === void 0) { racePromise = new Promise(function (res) {
-            }); }
-            if (this.hash) {
-                return Promise.resolve(this.hash);
-            }
-            if (typeof crypto === 'undefined') {
-                var error = new Error('Crypto API Error: crypto is not support');
-                return Promise.reject(error);
-            }
-            if (!crypto.subtle) {
-                var error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
-                return Promise.reject(error);
-            }
+            var _b = _a === void 0 ? {} : _a, isTransferSupported = _b.isTransferSupported, isEmitEvent = _b.isEmitEvent, _c = _b.racePromise, racePromise = _c === void 0 ? new Promise(function (res) {
+            }) : _c;
             this.workers.removeMessagesByChannel(this.channel);
             this.workers.removeAllListeners(this.channel);
             return Promise.race([
@@ -915,44 +1009,21 @@ define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], funct
                     var hashs = [];
                     var hashsLength = 0;
                     _this.workers.on(_this.channel, function (payload) { return __awaiter(_this, void 0, void 0, function () {
-                        var perfex, isSmallFile, result, byte, dv, calcedhash;
                         return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0:
-                                    if (payload.type === 'error') {
-                                        this.workers.removeAllListeners(this.channel);
-                                        reject(new Error(payload.data));
-                                    }
-                                    hashs[payload.data.index] = payload.data.sha1;
-                                    hashsLength++;
-                                    this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
-                                    isEmitEvent && this.emit(QETagWorker.Events.UpdateProgress, this.process);
-                                    if (!(hashsLength === blocksLength)) return [3, 4];
-                                    perfex = Math.log2(this.file.blockSize);
-                                    isSmallFile = hashsLength === 1;
-                                    result = null;
-                                    if (!isSmallFile) return [3, 1];
-                                    result = hashs[0];
-                                    return [3, 3];
-                                case 1:
-                                    perfex = 0x80 | perfex;
-                                    result = hashs.reduce(function (a, b) { return utils_5.concatBuffer(a, b); });
-                                    return [4, crypto.subtle.digest('SHA-1', result)];
-                                case 2:
-                                    result = _a.sent();
-                                    _a.label = 3;
-                                case 3:
-                                    byte = new ArrayBuffer(1);
-                                    dv = new DataView(byte);
-                                    dv.setUint8(0, perfex);
-                                    result = utils_5.concatBuffer(byte, result);
-                                    result = utils_5.arrayBufferToBase64(result);
-                                    calcedhash = utils_5.urlSafeBase64(result) + this.file.size.toString(36);
-                                    this.workers.removeAllListeners(this.channel);
-                                    resolve(calcedhash);
-                                    _a.label = 4;
-                                case 4: return [2];
+                            if (payload.type === 'error') {
+                                this.workers.removeAllListeners(this.channel);
+                                reject(new Error(payload.data));
                             }
+                            hashs[payload.data.index] = payload.data.sha1;
+                            hashsLength++;
+                            this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
+                            isEmitEvent && this.emit(QETagWorker.Events.UpdateProgress, this.process);
+                            if (hashsLength === blocksLength) {
+                                this.workers.removeAllListeners(this.channel);
+                                this.hashs = hashs;
+                                resolve(this);
+                            }
+                            return [2];
                         });
                     }); });
                     blocks.forEach(function (block) {
@@ -968,14 +1039,7 @@ define("qetag/worker", ["require", "exports", "qetag/base", "core/utils"], funct
                         }, opts);
                     });
                 })
-            ])
-                .then(function (res) {
-                if (res === 'race-to-stop') {
-                    _this.workers.removeMessagesByChannel(_this.channel);
-                }
-                _this.hash = res;
-                return res;
-            });
+            ]);
         };
         return QETagWorker;
     }(base_5.default));
@@ -1270,16 +1334,16 @@ define("core/ctx", ["require", "exports"], function (require, exports) {
     }());
     exports.default = Ctx;
 });
-define("service", ["require", "exports", "core/status", "qetag/index", "worker/index", "qetag/worker-script", "http/worker-script", "core/file", "http/index", "core/utils", "constants/status", "core/ctx", "third-parts/merge"], function (require, exports, status_3, index_1, index_2, worker_script_1, worker_script_2, file_1, index_3, utils_6, status_4, ctx_1, merge_2) {
+define("service", ["require", "exports", "core/status", "qetag/index", "worker/index", "qetag/worker-script", "http/worker-script", "core/file", "http/index", "core/utils", "constants/status", "core/ctx", "third-parts/merge"], function (require, exports, status_3, index_2, index_3, worker_script_1, worker_script_2, file_1, index_4, utils_6, status_4, ctx_1, merge_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     status_3 = __importDefault(status_3);
-    index_1 = __importDefault(index_1);
     index_2 = __importDefault(index_2);
+    index_3 = __importDefault(index_3);
     worker_script_1 = __importDefault(worker_script_1);
     worker_script_2 = __importDefault(worker_script_2);
     file_1 = __importDefault(file_1);
-    index_3 = __importDefault(index_3);
+    index_4 = __importDefault(index_4);
     ctx_1 = __importDefault(ctx_1);
     var qetagWorkers;
     var uploaderWorkers;
@@ -1313,7 +1377,7 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
             });
             _this.props = fileProps;
             if (config.adapter) {
-                if (!(config.adapter in index_1.default)) {
+                if (!(config.adapter in index_2.default)) {
                     delete config.adapter;
                 }
             }
@@ -1351,12 +1415,12 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
             var _this = this;
             if (!this.qetag) {
                 if (!qetagWorkers && this.config.adapter === 'Worker') {
-                    qetagWorkers = new index_2.default(index_2.default.asyncFnMover(worker_script_1.default), Service.default.taskConcurrencyInWorkers);
+                    qetagWorkers = new index_3.default(index_3.default.asyncFnMover(worker_script_1.default), Service.default.taskConcurrencyInWorkers);
                 }
-                this.qetag = new index_1.default[this.config.adapter](this.file, {
+                this.qetag = new index_2.default[this.config.adapter](this.file, {
                     workers: qetagWorkers
                 });
-                this.qetag.on(index_1.default.Base.Events.UpdateProgress, function (progress) {
+                this.qetag.on(index_2.default.Base.Events.UpdateProgress, function (progress) {
                     _this.hashCalcProgress = progress;
                     _this.config.onStatusChange(_this, _this.status);
                 });
@@ -1367,13 +1431,13 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
             var _this = this;
             if (!this.http) {
                 if (!uploaderWorkers && this.config.adapter === 'Worker') {
-                    uploaderWorkers = new index_2.default(index_2.default.asyncFnMover(worker_script_2.default), Service.default.taskConcurrencyInWorkers);
+                    uploaderWorkers = new index_3.default(index_3.default.asyncFnMover(worker_script_2.default), Service.default.taskConcurrencyInWorkers);
                 }
-                this.http = new index_3.default[this.config.adapter]({
+                this.http = new index_4.default[this.config.adapter]({
                     workers: uploaderWorkers
                 });
                 var throttle_1 = utils_6.createThrottle(1000);
-                this.http.on(index_3.default.Base.Events.UpdateProgress, function () {
+                this.http.on(index_4.default.Base.Events.UpdateProgress, function () {
                     throttle_1(function () {
                         _this.setProgress();
                     });
@@ -1417,9 +1481,10 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                 onChange();
             })
                 .addStatusHandler(status_4.STATUS.DONE, function () {
-                var _a;
+                var _a, _b;
                 _this.progress = 100;
                 (_a = _this.qetag) === null || _a === void 0 ? void 0 : _a.removeAllListeners();
+                (_b = _this.http) === null || _b === void 0 ? void 0 : _b.removeAllListeners();
                 onChange();
             })
                 .addStatusHandler(status_4.STATUS.FAILED, onChange)
@@ -1460,7 +1525,7 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
             }
             config.url = this.tokenInfo.partUploadUrl + config.url;
             return http.post(config, {
-                isTransferablesSupported: index_2.default.isTransferablesSupported(),
+                isTransferablesSupported: index_3.default.isTransferablesSupported(),
                 isEmitEvent: true
             });
         };
@@ -1481,19 +1546,21 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                 })
             });
         };
-        Service.prototype.getHash = function (raceFunction) {
+        Service.prototype.calcHash = function () {
             var qetag = this._qetag();
             if (qetag.isExist()) {
-                return Promise.resolve(qetag.getSync());
+                return Promise.resolve(qetag);
             }
-            return qetag.get({
-                isTransferablesSupported: index_2.default.isTransferablesSupported(),
-                isEmitEvent: true
-            }, raceFunction);
+            var config = {
+                isTransferablesSupported: index_3.default.isTransferablesSupported(),
+                isEmitEvent: true,
+                tag: qetag
+            };
+            return utils_6.makePromiseChain(config, qetag.calc.bind(qetag), Service.interceptors.qetag);
         };
-        Service.prototype.getHashSync = function () {
+        Service.prototype.getHash = function () {
             var qetag = this._qetag();
-            return qetag.getSync();
+            return qetag.get();
         };
         Service.prototype.setHash = function (hash) {
             var qetag = this._qetag();
@@ -1520,7 +1587,7 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
                         case 0:
                             http = this._http();
                             params = {
-                                hash: this.getHashSync(),
+                                hash: this.getHash(),
                                 name: this.file.name,
                                 op: this.props.op || 0
                             };
@@ -1555,7 +1622,7 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
 define("index", ["require", "exports", "constants/status", "service", "constants/status"], function (require, exports, status_5, service_1, status_6) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.WebFile = exports.UPLOADING_STATUS = exports.TASK_STATUS_INFO = exports.STATUS = void 0;
+    exports.WebFile = void 0;
     service_1 = __importDefault(service_1);
     Object.defineProperty(exports, "STATUS", { enumerable: true, get: function () { return status_6.STATUS; } });
     Object.defineProperty(exports, "TASK_STATUS_INFO", { enumerable: true, get: function () { return status_6.TASK_STATUS_INFO; } });
@@ -1595,7 +1662,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
         };
         WebFile.prototype.upload = function () {
             return __awaiter(this, void 0, void 0, function () {
-                var qetag, resolveRefs_1, result, e_1, e_2;
+                var qetag, result, e_1, e_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -1606,18 +1673,10 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                         case 1:
                             _a.trys.push([1, 7, , 8]);
                             this.setStatus(status_5.STATUS.CALCULATING);
-                            qetag = this._qetag();
-                            qetag.removeAllListeners('race-to-stop');
-                            qetag.on('race-to-stop', function () {
-                                resolveRefs_1 && resolveRefs_1('race-to-stop');
-                            });
-                            return [4, this.getHash(new Promise(function (resolve) {
-                                    resolveRefs_1 = resolve;
-                                }))];
+                            return [4, this.calcHash()];
                         case 2:
-                            _a.sent();
-                            if (qetag.getSync() === 'race-to-stop') {
-                                qetag.set('');
+                            qetag = _a.sent();
+                            if (qetag.raceToStop) {
                                 return [2];
                             }
                             this.setStatus(status_5.STATUS.PREPARING);
@@ -1696,7 +1755,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                                 throw new Error("Create: " + data.message);
                             }
                             res = JSON.parse(data.response);
-                            if (res.hash !== this.getHashSync()) {
+                            if (res.hash !== this.getHash()) {
                                 throw new Error("Warning: File check failed");
                             }
                             this.setNormalFile(res);

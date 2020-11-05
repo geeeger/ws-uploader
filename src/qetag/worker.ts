@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import QETagBase from "./base";
 import * as Interface from "../interface";
-import { guid, concatBuffer, arrayBufferToBase64, urlSafeBase64 } from "../core/utils";
+import { guid } from "../core/utils";
 
 /**
  * 提供计算qetag的worker服务
@@ -44,33 +44,18 @@ export default class QETagWorker extends QETagBase implements Interface.QETagWor
     }
 
     /**
-     * 计算并获取hash
-     *
-     * @param {*} [{ isTransferSupported, isEmitEvent }={}]
-     * @param {Promise<string>} [racePromise=new Promise((res) => {
+     * @description 计算并获取hash
+     * @param {*} [{ isTransferSupported, isEmitEvent, racePromise = new Promise((res) => {
      *             // do nothing
-     *         })]
-     * @return {*}  {Promise<string>}
+     *         }) }={}]
+     * @return {*}  {Promise<this>}
      * @memberof QETagWorker
      */
-    public get(
-        { isTransferSupported, isEmitEvent }: any = {},
-        racePromise: Promise<string> = new Promise((res) => {
+    public calc(
+        { isTransferSupported, isEmitEvent, racePromise = new Promise((res) => {
             // do nothing
-        })
-    ): Promise<string> {
-        if (this.hash) {
-            return Promise.resolve(this.hash);
-        }
-        if (typeof crypto === 'undefined') {
-            const error = new Error('Crypto API Error: crypto is not support');
-            // console.error(error);
-            return Promise.reject(error);
-        }
-        if (!crypto.subtle) {
-            const error = new Error('Crypto API Error: crypto.subtle is supposed to be undefined in insecure contexts');
-            return Promise.reject(error);
-        }
+        }) }: any = {}
+    ): Promise<this> {
         this.workers.removeMessagesByChannel(this.channel);
         this.workers.removeAllListeners(this.channel);
         return Promise.race([
@@ -90,25 +75,9 @@ export default class QETagWorker extends QETagBase implements Interface.QETagWor
                     this.process = parseFloat((hashsLength * 100 / blocksLength).toFixed(2));
                     isEmitEvent && this.emit(QETagWorker.Events.UpdateProgress, this.process);
                     if (hashsLength === blocksLength) {
-                        let perfex = Math.log2(this.file.blockSize);
-                        const isSmallFile = hashsLength === 1;
-                        let result = null;
-                        if (isSmallFile) {
-                            result = hashs[0];
-                        } else {
-                            perfex = 0x80 | perfex;
-                            result = hashs.reduce((a, b): ArrayBuffer => concatBuffer(a, b));
-                            result = await crypto.subtle.digest('SHA-1', result);
-                        }
-                        const byte = new ArrayBuffer(1);
-                        const dv = new DataView(byte);
-                        dv.setUint8(0, perfex);
-                        result = concatBuffer(byte, result);
-                        result = arrayBufferToBase64(result);
-    
-                        const calcedhash = urlSafeBase64(result) + this.file.size.toString(36);
                         this.workers.removeAllListeners(this.channel);
-                        resolve(calcedhash);
+                        this.hashs = hashs
+                        resolve(this);
                     }
                 });
                 blocks.forEach((block: Interface.Block): void => {
@@ -123,14 +92,7 @@ export default class QETagWorker extends QETagBase implements Interface.QETagWor
                         },
                     }, opts);
                 });
-            }) as Promise<string>
+            }) as Promise<this>
         ])
-            .then(res => {
-                if (res === 'race-to-stop') {
-                    this.workers.removeMessagesByChannel(this.channel);
-                }
-                this.hash = res;
-                return res;
-            })
     }
 }

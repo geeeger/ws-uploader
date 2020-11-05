@@ -1,5 +1,6 @@
 import { UploaderConfig } from "../constants/uploader-config";
 import { merge } from "../third-parts/merge";
+import interceptors from "./interceptors/index";
 
 type Config = typeof UploaderConfig
 
@@ -16,6 +17,13 @@ export default class Base {
      * @memberof Base
      */
     static default = UploaderConfig;
+
+    /**
+     * @description 内建截断器，准备优化，将上传服务拆出，方便加料
+     * @static
+     * @memberof Base
+     */
+    static interceptors = interceptors;
 
     /**
      * 设置全局共享的上传配置

@@ -11,7 +11,8 @@
   "scripts": {
     "test": "jest",
     "build": "rimraf lib/ && tsc --project .",
-    "build:test": "tsc -p ./es.tsconfig.json"
+    "build:test": "tsc -p ./es.tsconfig.json",
+    "docs": "typedoc --out docs src"
   },
   "repository": {
     "type": "git",

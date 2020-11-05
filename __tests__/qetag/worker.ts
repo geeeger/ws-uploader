@@ -19,10 +19,8 @@ describe('test qetage/normal', () => {
 
         const result = 'Fob35Df6paf84V0d3Lnq6uo3dme41'
 
-        expect(qetag.getSync()).toBe('')
-        await expect(qetag.get({})).resolves.toBe(result)
-        expect(qetag.getSync()).toBe(result)
-        qetag.set('test')
-        expect(qetag.getSync()).toBe('test')
+        expect(qetag.get()).toBe('')
+        await expect(qetag.calc({})).resolves.toHaveProperty('hash', '')
+        // expect(qetag.get()).toBe('')
     })
 })
