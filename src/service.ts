@@ -17,9 +17,12 @@ import Ctx from "./core/ctx";
 import Chunk from "./core/chunk";
 import { merge } from "./third-parts/merge";
 import { HttpClientProps } from "./interface";
+import sharedInternal from "./shared/index";
 
-let qetagWorkers: WorkerProvider;
-let uploaderWorkers: WorkerProvider;
+const {
+    qetagWorkers,
+    uploaderWorkers
+} = sharedInternal;
 
 export type AdapterType = 'Normal' | 'Worker';
 
@@ -286,12 +289,12 @@ export default class Service extends Status {
      */
     _qetag(): QeTagNormal | QeTagWorker {
         if (!this.qetag) {
-            if (!qetagWorkers && this.config.adapter === 'Worker') {
-                qetagWorkers = new WorkerProvider(WorkerProvider.asyncFnMover(QeTagWorkerScript), Service.default.taskConcurrencyInWorkers);
+            if (!qetagWorkers.current && this.config.adapter === 'Worker') {
+                qetagWorkers.current = new WorkerProvider(WorkerProvider.asyncFnMover(QeTagWorkerScript), Service.default.taskConcurrencyInWorkers);
             }
     
             this.qetag = new QeTag[this.config.adapter](this.file, {
-                workers: qetagWorkers
+                workers: qetagWorkers.current as WorkerProvider
             });
             this.qetag.on(QeTag.Base.Events.UpdateProgress, (progress: number) => {
                 this.hashCalcProgress = progress;
@@ -308,11 +311,11 @@ export default class Service extends Status {
      */
     _http(): HttpClient | WorkerClient {
         if (!this.http) {
-            if (!uploaderWorkers && this.config.adapter === 'Worker') {
-                uploaderWorkers = new WorkerProvider(WorkerProvider.asyncFnMover(uploaderWorkerScript), Service.default.taskConcurrencyInWorkers);
+            if (!uploaderWorkers.current && this.config.adapter === 'Worker') {
+                uploaderWorkers.current = new WorkerProvider(WorkerProvider.asyncFnMover(uploaderWorkerScript), Service.default.taskConcurrencyInWorkers);
             }
             this.http = new Http[this.config.adapter]({
-                workers: uploaderWorkers
+                workers: uploaderWorkers.current as WorkerProvider
             });
             const throttle = createThrottle(1000)
             this.http.on(Http.Base.Events.UpdateProgress, () => {
