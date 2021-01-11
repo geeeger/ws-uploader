@@ -142,7 +142,7 @@ require(['index'], function (a) {
         var time = new Date();
         f = new WebFile(
             // 原始file对象
-            mock ? m.create('test.txt', 10 * 1024 * 1024 + Math.floor(Math.random() * 10000)) : s.files[0],
+            mock ? m.create('test.txt', 8 * 1024 * 1024 + Math.floor(Math.random() * 10000)) : s.files[0],
             {
                 // path或parent参数,选其一
                 path: '/',
