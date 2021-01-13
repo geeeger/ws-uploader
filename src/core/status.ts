@@ -121,6 +121,9 @@ class Status extends Base {
      * @memberof Status
      */
     setStatus(status: STATUS): void {
+        if (this.status === STATUS.DONE) {
+            return;
+        }
         this.status = status
         const handler = this._statusHandlers[status]
 
