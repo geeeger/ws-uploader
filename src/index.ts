@@ -32,6 +32,14 @@ export class WebFile extends Service {
     pos: any[] = [];
 
     /**
+     * @description 创建文件请求锁
+     * @private
+     * @type {*}
+     * @memberof WebFile
+     */
+    private _making: any = null;
+
+    /**
      * Creates an instance of WebFile.
      * @param {File} file
      * @param {FileProps} [fileProps={}]
@@ -63,17 +71,20 @@ export class WebFile extends Service {
     public resume(): void {
         if (this.isFailed()) {
             this.restTryCount();
-            this.upload();
+            if (this.ctx.size === this.file.getChunksSize()) {
+                if (!this._mkfile) {
+                    this.setStatus(STATUS.UPLOADING);
+                    this._making = this._mkfile()
+                }
+            } else {
+                this.upload();
+            }
             return;
         }
         if (this.isPaused()) {
             this.upload();
             return;
         }
-        // if (this.isCancel()) {
-        //     return Promise.reject(new Error(`Error: Uploader destoryed`))
-        // }
-        // return Promise.reject(new Error(`Warning: Uploading`));
         return;
     }
 
@@ -144,6 +155,9 @@ export class WebFile extends Service {
         if (this.isPaused()) {
             return;
         }
+        if (this.isFailed()) {
+            return;
+        }
 
         try {
             if (this.isCancel()) {
@@ -159,40 +173,11 @@ export class WebFile extends Service {
             return;
         }
         
-        try {
-            if (this.ctx.size === this.file.getChunksSize()) {
-                const data = await this.createFile();
-                // 测试用例里一种意外情况，请求太快（mock），（调起两次start）两次start都执行到这里
-                // 在目前现实世界中不会出现这种问题，当然，为了过测试，加一段代码
-                if (this.isDone()) {
-                    return;
-                }
-                if (data.code) {
-                    throw new Error(`Create: ${data.message}`);
-                }
-                const res = JSON.parse(data.response as string) as UploadedFileInfo;
-                if (res.hash !== this.getHash()) {
-                    throw new Error(`Warning: File check failed`);
-                }
-                this.setNormalFile(res);
-                this.setStatus(STATUS.DONE);
-                return;
-            }
-            this.setPos();
-            this.pos.filter(p => p.status === STATUS.PENDING).map(v => {
-                v.status = STATUS.UPLOADING;
-                this.blockStart(v);
-            });
-        }
-        catch (e) {
-            this.recordError(e);
-            // 当一次tryout后，不再执行
-            if (!this.isTryout()) {
-                this.markTry();
-                this.start();
-            }
-            return;
-        }
+        this.setPos();
+        this.pos.filter(p => p.status === STATUS.PENDING).map(v => {
+            v.status = STATUS.UPLOADING;
+            this.blockStart(v);
+        });
     }
 
     /**
@@ -217,6 +202,28 @@ export class WebFile extends Service {
             }
             len--;
         }
+    }
+
+    private async _mkfile() {
+        try {
+            const data = await this.createFile();
+            if (this.isDone()) {
+                return;
+            }
+            if (data.code) {
+                throw new Error(`Create: ${data.message}`);
+            }
+            const res = JSON.parse(data.response as string) as UploadedFileInfo;
+            if (res.hash !== this.getHash()) {
+                throw new Error(`Warning: File check failed`);
+            }
+            this.setNormalFile(res);
+            this.setStatus(STATUS.DONE);
+        } catch (e) {
+            this.recordError(e);
+            this.setStatus(STATUS.FAILED);
+        }
+        this._making = null
     }
 
     /**
@@ -258,7 +265,16 @@ export class WebFile extends Service {
             const chunks = block.getChunks();
             await this._orderTask(chunks);
             info.status = STATUS.DONE;
-            this.start();
+            if (this.ctx.size === this.file.getChunksSize()) {
+                if (this.isDone()) {
+                    return;
+                }
+                if (!this._making) {
+                    this._making = this._mkfile();
+                }
+            } else {
+                this.start();
+            }
         }
         catch (e) {
             if (info.status !== STATUS.PENDING) {
