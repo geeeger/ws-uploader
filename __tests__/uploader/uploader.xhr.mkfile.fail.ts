@@ -63,7 +63,7 @@ describe('test src/index.js', () => {
             adapter: 'Normal',
             onStatusChange: (ctx, status) => {
                 if (status === STATUS.FAILED) {
-                    expect(ctx.getError().filter(e => (e.message + '').includes('Tryout')).length).toBe(1)
+                    expect(ctx.getError().length).toBe(1)
                     done()
                 }
             }
