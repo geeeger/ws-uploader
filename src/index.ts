@@ -261,7 +261,11 @@ export class WebFile extends Service {
             this.start();
         }
         catch (e) {
-            info.status = STATUS.PENDING;
+            if (info.status !== STATUS.PENDING) {
+                info.status = STATUS.PENDING;
+            } else {
+                return;
+            }
             this.recordError(e);
             this.ctx.clear(info.index);
             // 当一次tryout后，不再执行
