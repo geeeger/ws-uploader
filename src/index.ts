@@ -45,47 +45,46 @@ export class WebFile extends Service {
     /**
      * 暂停上传
      *
-     * @return {*}  {Promise<any>}
+     * @return {*}  {void}
      * @memberof WebFile
      */
-    public pause(): Promise<any> {
+    public pause(): void {
         if (this.isUploading()) {
-            // this.log('pause')
             this.setStatus(STATUS.PAUSE);
-            return Promise.resolve();
         }
-        return Promise.reject(new Error(`Warning: Non-uploading`));
     }
 
     /**
      * 恢复上传
      *
-     * @return {*}  {Promise<any>}
+     * @return {*}  {void}
      * @memberof WebFile
      */
-    public resume(): Promise<any> {
+    public resume(): void {
         if (this.isFailed()) {
             this.restTryCount();
-            return this.upload();
+            this.upload();
+            return;
         }
         if (this.isPaused()) {
-            return this.upload();
+            this.upload();
+            return;
         }
-        if (this.isCancel()) {
-            return Promise.reject(new Error(`Error: Uploader destoryed`))
-        }
-        return Promise.reject(new Error(`Warning: Uploading`));
+        // if (this.isCancel()) {
+        //     return Promise.reject(new Error(`Error: Uploader destoryed`))
+        // }
+        // return Promise.reject(new Error(`Warning: Uploading`));
+        return;
     }
 
     /**
      * 取消上传
      *
-     * @return {*}  {Promise<any>}
+     * @return {*}  {void}
      * @memberof WebFile
      */
-    public cancel(): Promise<any> {
+    public cancel(): void {
         this.setStatus(STATUS.CANCEL);
-        return Promise.resolve();
     }
 
     /**
