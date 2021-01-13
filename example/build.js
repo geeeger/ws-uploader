@@ -119,17 +119,32 @@ define("core/utils", ["require", "exports"], function (require, exports) {
         };
     }
     exports.createThrottle = createThrottle;
+    var byteReduce = function (byte) {
+        function getNextLevel(byte, level) {
+            if (level === void 0) { level = 0; }
+            if (byte >= 1024) {
+                return getNextLevel(byte / 1024, level + 1);
+            }
+            else {
+                var units = {
+                    0: 'B',
+                    1: 'KB',
+                    2: 'MB',
+                    3: 'GB',
+                    4: 'TB',
+                    5: 'PB'
+                };
+                return {
+                    val: Number(byte).toFixed(2),
+                    unit: units[level] || 'unknown'
+                };
+            }
+        }
+        return getNextLevel(byte);
+    };
     function sizeToStr(size) {
-        if (size < 1024 * 1024) {
-            return (size / 1024).toFixed(2) + 'KB';
-        }
-        if (size < 1024 * 1024 * 1024) {
-            return (size / (1024 * 1024)).toFixed(2) + 'MB';
-        }
-        if (size < 1024 * 1024 * 1024 * 1024) {
-            return (size / (1024 * 1024 * 1024)).toFixed(2) + 'GB';
-        }
-        return '';
+        var res = byteReduce(size);
+        return res.val + res.unit;
     }
     exports.sizeToStr = sizeToStr;
     function log(debug) {
@@ -677,6 +692,9 @@ define("core/status", ["require", "exports", "constants/status", "core/base", "c
             return this;
         };
         Status.prototype.setStatus = function (status) {
+            if (this.status === status_1.STATUS.DONE) {
+                return;
+            }
             this.status = status;
             var handler = this._statusHandlers[status];
             if (handler) {
@@ -1334,7 +1352,33 @@ define("core/ctx", ["require", "exports"], function (require, exports) {
     }());
     exports.default = Ctx;
 });
-define("service", ["require", "exports", "core/status", "qetag/index", "worker/index", "qetag/worker-script", "http/worker-script", "core/file", "http/index", "core/utils", "constants/status", "core/ctx", "third-parts/merge"], function (require, exports, status_3, index_2, index_3, worker_script_1, worker_script_2, file_1, index_4, utils_6, status_4, ctx_1, merge_2) {
+define("shared/qetagWorkers", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var qetagWorkers = {
+        current: (null)
+    };
+    exports.default = qetagWorkers;
+});
+define("shared/uploaderWorkers", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var uploaderWorkers = {
+        current: (null)
+    };
+    exports.default = uploaderWorkers;
+});
+define("shared/index", ["require", "exports", "shared/qetagWorkers", "shared/uploaderWorkers"], function (require, exports, qetagWorkers_1, uploaderWorkers_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    qetagWorkers_1 = __importDefault(qetagWorkers_1);
+    uploaderWorkers_1 = __importDefault(uploaderWorkers_1);
+    exports.default = {
+        qetagWorkers: qetagWorkers_1.default,
+        uploaderWorkers: uploaderWorkers_1.default
+    };
+});
+define("service", ["require", "exports", "core/status", "qetag/index", "worker/index", "qetag/worker-script", "http/worker-script", "core/file", "http/index", "core/utils", "constants/status", "core/ctx", "third-parts/merge", "shared/index"], function (require, exports, status_3, index_2, index_3, worker_script_1, worker_script_2, file_1, index_4, utils_6, status_4, ctx_1, merge_2, index_5) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     status_3 = __importDefault(status_3);
@@ -1345,8 +1389,8 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
     file_1 = __importDefault(file_1);
     index_4 = __importDefault(index_4);
     ctx_1 = __importDefault(ctx_1);
-    var qetagWorkers;
-    var uploaderWorkers;
+    index_5 = __importDefault(index_5);
+    var qetagWorkers = index_5.default.qetagWorkers, uploaderWorkers = index_5.default.uploaderWorkers;
     var Service = (function (_super) {
         __extends(Service, _super);
         function Service(file, fileProps, config) {
@@ -1414,11 +1458,11 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
         Service.prototype._qetag = function () {
             var _this = this;
             if (!this.qetag) {
-                if (!qetagWorkers && this.config.adapter === 'Worker') {
-                    qetagWorkers = new index_3.default(index_3.default.asyncFnMover(worker_script_1.default), Service.default.taskConcurrencyInWorkers);
+                if (!qetagWorkers.current && this.config.adapter === 'Worker') {
+                    qetagWorkers.current = new index_3.default(index_3.default.asyncFnMover(worker_script_1.default), Service.default.taskConcurrencyInWorkers);
                 }
                 this.qetag = new index_2.default[this.config.adapter](this.file, {
-                    workers: qetagWorkers
+                    workers: qetagWorkers.current
                 });
                 this.qetag.on(index_2.default.Base.Events.UpdateProgress, function (progress) {
                     _this.hashCalcProgress = progress;
@@ -1430,11 +1474,11 @@ define("service", ["require", "exports", "core/status", "qetag/index", "worker/i
         Service.prototype._http = function () {
             var _this = this;
             if (!this.http) {
-                if (!uploaderWorkers && this.config.adapter === 'Worker') {
-                    uploaderWorkers = new index_3.default(index_3.default.asyncFnMover(worker_script_2.default), Service.default.taskConcurrencyInWorkers);
+                if (!uploaderWorkers.current && this.config.adapter === 'Worker') {
+                    uploaderWorkers.current = new index_3.default(index_3.default.asyncFnMover(worker_script_2.default), Service.default.taskConcurrencyInWorkers);
                 }
                 this.http = new index_4.default[this.config.adapter]({
-                    workers: uploaderWorkers
+                    workers: uploaderWorkers.current
                 });
                 var throttle_1 = utils_6.createThrottle(1000);
                 this.http.on(index_4.default.Base.Events.UpdateProgress, function () {
@@ -1634,31 +1678,36 @@ define("index", ["require", "exports", "constants/status", "service", "constants
             if (config === void 0) { config = {}; }
             var _this = _super.call(this, file, fileProps, config) || this;
             _this.pos = [];
+            _this._making = null;
             return _this;
         }
         WebFile.prototype.pause = function () {
             if (this.isUploading()) {
                 this.setStatus(status_5.STATUS.PAUSE);
-                return Promise.resolve();
             }
-            return Promise.reject(new Error("Warning: Non-uploading"));
         };
         WebFile.prototype.resume = function () {
             if (this.isFailed()) {
                 this.restTryCount();
-                return this.upload();
+                if (this.ctx.size === this.file.getChunksSize()) {
+                    if (!this._mkfile) {
+                        this.setStatus(status_5.STATUS.UPLOADING);
+                        this._making = this._mkfile();
+                    }
+                }
+                else {
+                    this.upload();
+                }
+                return;
             }
             if (this.isPaused()) {
-                return this.upload();
+                this.upload();
+                return;
             }
-            if (this.isCancel()) {
-                return Promise.reject(new Error("Error: Uploader destoryed"));
-            }
-            return Promise.reject(new Error("Warning: Uploading"));
+            return;
         };
         WebFile.prototype.cancel = function () {
             this.setStatus(status_5.STATUS.CANCEL);
-            return Promise.resolve();
         };
         WebFile.prototype.upload = function () {
             return __awaiter(this, void 0, void 0, function () {
@@ -1717,67 +1766,36 @@ define("index", ["require", "exports", "constants/status", "service", "constants
         };
         WebFile.prototype.start = function () {
             return __awaiter(this, void 0, void 0, function () {
-                var data, res, e_3;
                 var _this = this;
                 return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            if (this.isDone()) {
-                                return [2];
-                            }
-                            if (this.isPaused()) {
-                                return [2];
-                            }
-                            try {
-                                if (this.isCancel()) {
-                                    throw new Error("Warning: Cancel upload");
-                                }
-                                if (this.isTryout()) {
-                                    throw new Error("Warning: Upload Tryout");
-                                }
-                            }
-                            catch (e) {
-                                this.recordError(e);
-                                this.setStatus(status_5.STATUS.FAILED);
-                                return [2];
-                            }
-                            _a.label = 1;
-                        case 1:
-                            _a.trys.push([1, 4, , 5]);
-                            if (!(this.ctx.size === this.file.getChunksSize())) return [3, 3];
-                            return [4, this.createFile()];
-                        case 2:
-                            data = _a.sent();
-                            if (this.isDone()) {
-                                return [2];
-                            }
-                            if (data.code) {
-                                throw new Error("Create: " + data.message);
-                            }
-                            res = JSON.parse(data.response);
-                            if (res.hash !== this.getHash()) {
-                                throw new Error("Warning: File check failed");
-                            }
-                            this.setNormalFile(res);
-                            this.setStatus(status_5.STATUS.DONE);
-                            return [2];
-                        case 3:
-                            this.setPos();
-                            this.pos.filter(function (p) { return p.status === status_5.STATUS.PENDING; }).map(function (v) {
-                                v.status = status_5.STATUS.UPLOADING;
-                                _this.blockStart(v);
-                            });
-                            return [3, 5];
-                        case 4:
-                            e_3 = _a.sent();
-                            this.recordError(e_3);
-                            if (!this.isTryout()) {
-                                this.markTry();
-                                this.start();
-                            }
-                            return [2];
-                        case 5: return [2];
+                    if (this.isDone()) {
+                        return [2];
                     }
+                    if (this.isPaused()) {
+                        return [2];
+                    }
+                    if (this.isFailed()) {
+                        return [2];
+                    }
+                    try {
+                        if (this.isCancel()) {
+                            throw new Error("Warning: Cancel upload");
+                        }
+                        if (this.isTryout()) {
+                            throw new Error("Warning: Upload Tryout");
+                        }
+                    }
+                    catch (e) {
+                        this.recordError(e);
+                        this.setStatus(status_5.STATUS.FAILED);
+                        return [2];
+                    }
+                    this.setPos();
+                    this.pos.filter(function (p) { return p.status === status_5.STATUS.PENDING; }).map(function (v) {
+                        v.status = status_5.STATUS.UPLOADING;
+                        _this.blockStart(v);
+                    });
+                    return [2];
                 });
             });
         };
@@ -1798,6 +1816,41 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                 }
                 len--;
             }
+        };
+        WebFile.prototype._mkfile = function () {
+            return __awaiter(this, void 0, void 0, function () {
+                var data, res, e_3;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4, this.createFile()];
+                        case 1:
+                            data = _a.sent();
+                            if (this.isDone()) {
+                                return [2];
+                            }
+                            if (data.code) {
+                                throw new Error("Create: " + data.message);
+                            }
+                            res = JSON.parse(data.response);
+                            if (res.hash !== this.getHash()) {
+                                throw new Error("Warning: File check failed");
+                            }
+                            this.setNormalFile(res);
+                            this.setStatus(status_5.STATUS.DONE);
+                            return [3, 3];
+                        case 2:
+                            e_3 = _a.sent();
+                            this.recordError(e_3);
+                            this.setStatus(status_5.STATUS.FAILED);
+                            return [3, 3];
+                        case 3:
+                            this._making = null;
+                            return [2];
+                    }
+                });
+            });
         };
         WebFile.prototype._orderTask = function (chunks) {
             var _this = this;
@@ -1832,11 +1885,26 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                         case 1:
                             _a.sent();
                             info.status = status_5.STATUS.DONE;
-                            this.start();
+                            if (this.ctx.size === this.file.getChunksSize()) {
+                                if (this.isDone()) {
+                                    return [2];
+                                }
+                                if (!this._making) {
+                                    this._making = this._mkfile();
+                                }
+                            }
+                            else {
+                                this.start();
+                            }
                             return [3, 3];
                         case 2:
                             e_4 = _a.sent();
-                            info.status = status_5.STATUS.PENDING;
+                            if (info.status !== status_5.STATUS.PENDING) {
+                                info.status = status_5.STATUS.PENDING;
+                            }
+                            else {
+                                return [2];
+                            }
                             this.recordError(e_4);
                             this.ctx.clear(info.index);
                             if (!this.isTryout()) {
