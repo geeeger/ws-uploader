@@ -1690,7 +1690,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
             if (this.isFailed()) {
                 this.restTryCount();
                 if (this.ctx.size === this.file.getChunksSize()) {
-                    if (!this._mkfile) {
+                    if (!this._making) {
                         this.setStatus(status_5.STATUS.UPLOADING);
                         this._making = this._mkfile();
                     }
@@ -1789,6 +1789,15 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                         this.recordError(e);
                         this.setStatus(status_5.STATUS.FAILED);
                         return [2];
+                    }
+                    if (this.ctx.size === this.file.getChunksSize()) {
+                        if (this.isDone()) {
+                            return [2];
+                        }
+                        if (!this._making) {
+                            this._making = this._mkfile();
+                            return [2];
+                        }
                     }
                     this.setPos();
                     this.pos.filter(function (p) { return p.status === status_5.STATUS.PENDING; }).map(function (v) {
