@@ -72,7 +72,7 @@ export class WebFile extends Service {
         if (this.isFailed()) {
             this.restTryCount();
             if (this.ctx.size === this.file.getChunksSize()) {
-                if (!this._mkfile) {
+                if (!this._making) {
                     this.setStatus(STATUS.UPLOADING);
                     this._making = this._mkfile()
                 }
@@ -171,6 +171,16 @@ export class WebFile extends Service {
             this.recordError(e);
             this.setStatus(STATUS.FAILED);
             return;
+        }
+
+        if (this.ctx.size === this.file.getChunksSize()) {
+            if (this.isDone()) {
+                return;
+            }
+            if (!this._making) {
+                this._making = this._mkfile();
+                return;
+            }
         }
         
         this.setPos();
