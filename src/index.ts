@@ -40,6 +40,14 @@ export class WebFile extends Service {
     private _making: any = null;
 
     /**
+     * @description 缓存已完成位置
+     * @private
+     * @type {*}
+     * @memberof WebFile
+     */
+    private _blocks: any = {};
+
+    /**
      * Creates an instance of WebFile.
      * @param {File} file
      * @param {FileProps} [fileProps={}]
@@ -204,7 +212,7 @@ export class WebFile extends Service {
         }
         while (len) {
             pos++;
-            if (this.file.getBlockByIndex(pos)) {
+            if (this.file.getBlockByIndex(pos) && !this._blocks[pos]) {
                 this.pos.push({
                     index: pos,
                     status: STATUS.PENDING
@@ -217,6 +225,7 @@ export class WebFile extends Service {
     private async _mkfile() {
         try {
             const data = await this.createFile();
+            this._blocks = null;
             if (this.isDone()) {
                 return;
             }
@@ -250,7 +259,20 @@ export class WebFile extends Service {
         for (let i = 0; i < chunks.length; i++) {
             const chunk = chunks[i];
             promise = promise
-                .then((ctx: any) => this.chunkUpload(chunk, ctx))
+                .then(async (ctx: any) => {
+                    const times = new Array(WebFile.default.chunkRetry || 1).fill(0)
+                    let err: any;
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    for (const _ of times) {
+                        try {
+                            const result = await this.chunkUpload(chunk, ctx)
+                            return result
+                        } catch (e) {
+                            err = e
+                        }
+                    }
+                    throw err
+                })
                 .then((res) => {
                     if (res.code) {
                         throw new Error(`Chunk: ${res.message}`);
@@ -275,6 +297,7 @@ export class WebFile extends Service {
             const chunks = block.getChunks();
             await this._orderTask(chunks);
             info.status = STATUS.DONE;
+            this._blocks[info.index] = 1;
             if (this.ctx.size === this.file.getChunksSize()) {
                 if (this.isDone()) {
                     return;

@@ -1679,6 +1679,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
             var _this = _super.call(this, file, fileProps, config) || this;
             _this.pos = [];
             _this._making = null;
+            _this._blocks = {};
             return _this;
         }
         WebFile.prototype.pause = function () {
@@ -1817,7 +1818,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
             }
             while (len) {
                 pos++;
-                if (this.file.getBlockByIndex(pos)) {
+                if (this.file.getBlockByIndex(pos) && !this._blocks[pos]) {
                     this.pos.push({
                         index: pos,
                         status: status_5.STATUS.PENDING
@@ -1836,6 +1837,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                             return [4, this.createFile()];
                         case 1:
                             data = _a.sent();
+                            this._blocks = null;
                             if (this.isDone()) {
                                 return [2];
                             }
@@ -1867,7 +1869,35 @@ define("index", ["require", "exports", "constants/status", "service", "constants
             var _loop_1 = function (i) {
                 var chunk = chunks[i];
                 promise = promise
-                    .then(function (ctx) { return _this.chunkUpload(chunk, ctx); })
+                    .then(function (ctx) { return __awaiter(_this, void 0, void 0, function () {
+                    var times, err, _i, times_1, _, result, e_4;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                times = new Array(WebFile.default.chunkRetry || 1).fill(0);
+                                _i = 0, times_1 = times;
+                                _a.label = 1;
+                            case 1:
+                                if (!(_i < times_1.length)) return [3, 6];
+                                _ = times_1[_i];
+                                _a.label = 2;
+                            case 2:
+                                _a.trys.push([2, 4, , 5]);
+                                return [4, this.chunkUpload(chunk, ctx)];
+                            case 3:
+                                result = _a.sent();
+                                return [2, result];
+                            case 4:
+                                e_4 = _a.sent();
+                                err = e_4;
+                                return [3, 5];
+                            case 5:
+                                _i++;
+                                return [3, 1];
+                            case 6: throw err;
+                        }
+                    });
+                }); })
                     .then(function (res) {
                     if (res.code) {
                         throw new Error("Chunk: " + res.message);
@@ -1883,7 +1913,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
         };
         WebFile.prototype.blockStart = function (info) {
             return __awaiter(this, void 0, void 0, function () {
-                var block, chunks, e_4;
+                var block, chunks, e_5;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -1894,6 +1924,7 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                         case 1:
                             _a.sent();
                             info.status = status_5.STATUS.DONE;
+                            this._blocks[info.index] = 1;
                             if (this.ctx.size === this.file.getChunksSize()) {
                                 if (this.isDone()) {
                                     return [2];
@@ -1907,14 +1938,14 @@ define("index", ["require", "exports", "constants/status", "service", "constants
                             }
                             return [3, 3];
                         case 2:
-                            e_4 = _a.sent();
+                            e_5 = _a.sent();
                             if (info.status !== status_5.STATUS.PENDING) {
                                 info.status = status_5.STATUS.PENDING;
                             }
                             else {
                                 return [2];
                             }
-                            this.recordError(e_4);
+                            this.recordError(e_5);
                             this.ctx.clear(info.index);
                             if (!this.isTryout()) {
                                 this.markTry();
