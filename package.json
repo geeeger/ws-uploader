@@ -36,7 +36,7 @@
     "@types/node": "14.17.2",
     "@typescript-eslint/eslint-plugin": "4.8.2",
     "@typescript-eslint/parser": "4.8.2",
-    "eslint": "7.14.0",
+    "eslint": "7.28.0",
     "jest": "25.5.4",
     "jest-fetch-mock": "3.0.3",
     "jsdom-worker": "0.2.1",
