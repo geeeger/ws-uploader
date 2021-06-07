@@ -43,7 +43,7 @@
     "rimraf": "3.0.2",
     "ts-jest": "25.5.1",
     "typedoc": "0.19.2",
-    "typescript": "3.9.7"
+    "typescript": "3.9.9"
   },
   "dependencies": {}
 }
