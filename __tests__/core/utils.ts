@@ -38,7 +38,7 @@ describe('test core/utils.ts', () => {
         runner(mockfn1);
         await new Promise((res) => {
             setTimeout(() => {
-                res();
+                res(undefined);
             }, 110);
         });
         expect(mockfn).toBeCalledTimes(1);
