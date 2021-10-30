@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/geeeger/ws-uploader#readme",
   "devDependencies": {
-    "@peculiar/webcrypto": "1.1.7",
+    "@peculiar/webcrypto": "1.2.0",
     "@types/jest": "26.0.24",
     "@types/node": "14.17.32",
     "@typescript-eslint/eslint-plugin": "5.1.0",
